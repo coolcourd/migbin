@@ -1,0 +1,13 @@
+#!/bin/bash
+function migsync() {
+    if [[ $(echo $1) ]] && [[ $(echo $2) ]]
+    then
+    sshline=$(head -n 1 ~/migration/migstuff/source.txt)
+    ifile=$(ls ~/migration/migstuff/id_rsa)
+    sourcessh="ssh -i $ifile $sshline"
+    rsync -aPe "ssh -i $ifile" $sshline:$1 $2
+    else
+    echo we need 2 arguments
+    fi
+}
+migsync $1 $2

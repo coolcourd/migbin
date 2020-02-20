@@ -1,0 +1,30 @@
+#!/bin/bash
+function exportdbs() {
+    if [[ $1 == '-h' ]]; then
+        echo
+        echo run without args to export all dbs after cpanel password prompt
+        echo --prompt prompts you for a list of databases to export 
+        echo -p lets you provide the cpanel password
+        echo -h displays this help
+    else
+    if [[ $1 == '--prompt' ]]; then
+    echo 'paste 1 db per line use ctrl d when done'
+    dbs=`cat | sed '/^$/d'`
+    else
+    dbs=$(mysql -u $(whoami) -p$2 -sN -e "show databases;" | grep -v information_schema)
+    fi
+    mkdir ~/migrationdbs 2>/dev/null
+    cpuser="$(stat -c %U .)"
+    pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
+    dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
+    name="${cpuser}_${dbstuff}"
+    uapi Mysql create_user name=$name password=$pass 1>/dev/null
+    for x in $(echo $dbs)
+    do
+    uapi Mysql set_privileges_on_database user=$name database=$x privileges=ALL%20PRIVILEGES 1>/dev/null
+    mysqldump -u $name -p$pass $x > ~/migrationdbs/$x.sql
+    done
+    uapi Mysql delete_user name=$name
+    fi
+}
+exportdbs $1 $2
