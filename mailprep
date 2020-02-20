@@ -1,0 +1,27 @@
+#!/bin/bash
+function mailprep() {
+    echo 'paste imap lines'
+    cat | sed '/^$/d' | while read x
+    do
+    pass=$(echo $x | cut -d ' ' -f6)
+    email=$(echo $x | cut -d ' ' -f5)
+    user=$(echo $email | cut -d '@' -f1)
+    domain=$(echo $email | cut -d '@' -f2)
+    # set up email account
+    createmail=$(uapi Email add_pop email=$user password=$pass quota=0 domain=$domain skip_update_db=1 | grep status: | grep -oP [0-9])
+    if [[ $createmail -eq 1 ]]
+        then
+        echo created $email
+        else
+        # couldn't make email account, maybe it already exists, trying to set password.
+        updatemail=$(uapi Email passwd_pop email=$user password=$pass domain=$domain | grep status: | grep -oP [0-9])
+            if [[ $updatemail -eq 1 ]]
+                then
+                echo "set password for $email"
+                else
+                echo "error creating $email"
+            fi
+    fi
+    done
+}
+mailprep

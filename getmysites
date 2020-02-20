@@ -1,0 +1,29 @@
+#!/bin/bash
+function getmysites() {
+    echo reading wordpress sites
+    wps=$(find ~/public_html/ -type d -name wp-includes)
+    mkdir -p ~/migration/migstuff
+    echo $wps | sed 's/wp-includes//g' | sed 's/\s/\n/g' | sed 's/^/wp435ertgtrsite /g' > ~/migration/migstuff/mysites.txt
+    grep wp435ertgtrsite ~/migration/migstuff/mysites.txt | while read x
+    do
+    randnum=$(< /dev/urandom tr -dc 0-9 | head -c4)
+    y=$(echo $x | sed "s/wp435ertgtrsite/wpsite$randnum/")
+    sed -i "s~^$x$~$y~" ~/migration/migstuff/mysites.txt
+    done
+    echo 'installing wpcli'
+    curl https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar > ~/migration/bh-wpcli
+    chmod 700 ~/migration/bh-wpcli
+    wpcli="~/migration/bh-wpcli"
+    echo 'looping over wordpress sites to get more info'
+    ## wpsitephpversion wpsitewordpressversion phpversion'
+    grep wpsite ~/migration/migstuff/mysites.txt | while read x y
+    do
+    wpsite=$(echo $wpcli option get --path="$y" home | /bin/bash | tail -n1)
+    wpversion=$(echo grep "'wp_version\ ='" $y'wp-includes/version.php' | /bin/bash | cut -d "'" -f2)
+    prefix=$(echo grep "'_prefix'" $y'wp-config.php' | /bin/bash | cut -d "'" -f2)
+    echo "version is $wpversion"
+    sed -i "s^$y$^$y $wpsite $wpversion $prefix^" ~/migration/migstuff/mysites.txt
+    done
+    cat ~/migration/migstuff/mysites.txt
+}
+getmysites
