@@ -11,8 +11,9 @@ uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%2
 echo "name ${name} password ${pass} user ${name}"
 if [ -f wp-config.php ]; then
 mv wp-config.php .old-wp-config.php
-wp config create --dbname=$name --dbuser=$name --dbpass=<dbpass> --dbprefix=<dbprefix>
-wp config set WP_DEBUG false
+wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix
+wp config set WP_DEBUG false --type=variable
+mysql --user=$name -f --password=$pass $name < $1
 fi
 if [ "$#" -eq 1 ]
 then
