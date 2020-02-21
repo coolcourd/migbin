@@ -1,0 +1,8 @@
+#!/bin/bash
+function fixallwps() {
+    find ~/public_html -type f -name wp-config.php | sed 's/wp-config.php//' | while read x; do
+    cd $x
+    fixwpbs
+    done
+}
+fixallwps

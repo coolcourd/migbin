@@ -1,0 +1,2 @@
+#!/bin/bash
+wpurl -n $(wpurl 2>/dev/null | grep Home | cut -d " " -f3 | sed 's/https/http/') 2>/dev/null
