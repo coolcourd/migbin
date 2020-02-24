@@ -1,20 +1,8 @@
 #!/bin/bash
 function findwpandimport() {
     find ~/public_html -type f -name wp-config.php | sed 's/wp-config.php//' | while read x; do
-    dbname=$(wp --path=$x config get DB_NAME)
-    sqlresults=$(ls ~/migration/dbs/$dbname* | wc -w)
-    if [[ $(echo $sqlresults) == 1 ]]; then
     cd $x
-    sqlfile=$(ls ~/migration/dbs/$dbname*)
-    wpdbimport $sqlfile
-    else
-        if [[ $(echo $sqlresults) == 0 ]]; then
-        echo there is no sql file for $x
-        else
-        echo there are multiple sqlfiles for $x
-        echo $sqlfile
-        fi
-    fi
+    matchdbimport
     done
 }
 findwpandimport

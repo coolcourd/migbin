@@ -2,12 +2,13 @@
 function wplive() {
     if [[ $(echo $1) ]] && [[ $(echo $2) ]]
     then
-    if [[ $(ls $1/wp-config.php) ]]; then
+    if [[ $(ls ${1%/}/wp-config.php) ]]; then
     mkcd $2
     premig
-    rsync -avP $1 .
+    rsync -avP ${1%/}/ .
+    matchdbimport
     else
-    echo please run setupssh first
+    echo There is not a wordpress site in ${1%/}/
     fi
     else
     echo we need 2 arguments
