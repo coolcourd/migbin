@@ -7,6 +7,7 @@ function wplive() {
     premig
     rsync -avP ${1%/}/ .
     matchdbimport
+    fixwps
     else
     echo There is not a wordpress site in ${1%/}/
     fi
