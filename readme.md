@@ -58,7 +58,7 @@ examples:
 You can brace expand to grab multiple directoried from a source if you wrap the first argument in singlequotes.
 example: 
 * migsync '{etc,mail,public_html,migrationdbs}' ~/migration
-#### mkcd
+#### mkcd _bashrc function_
 Takes in a list of directories to make and cds you to the last one. This uses mkdir -p.
 #### premig
 Moves wordpress files and directories out of the current directory and into ~/premig$(date)

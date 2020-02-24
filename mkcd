@@ -1,7 +1,0 @@
-#!/bin/bash
-for x in "$@"
-do
-    mkdir -p "$x"
-done
-cd "${@: -1}"
-exec bash

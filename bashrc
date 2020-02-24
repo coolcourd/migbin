@@ -12,4 +12,11 @@ alias htoff='mv .htaccess .htaccessOFF'
 alias hton='mv .htaccessOFF .htaccess'
 alias db='grep DB_ wp-config.php'
 alias wpsqlurl="grep -oP siteurl\',\ ?\'[a-zA-Z0-8:/\.~]+\' "
+function mkcd() {
+    for x in "$@"
+do
+    mkdir -p "$x"
+done
+cd "${@: -1}"
+}
 PATH=$PATH:~/migration/migbin
