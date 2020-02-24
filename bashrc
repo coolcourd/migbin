@@ -19,4 +19,4 @@ do
 done
 cd "${@: -1}"
 }
-PATH=$PATH:~/migration/migbin
+PATH=$PATH:~/bin/migbin

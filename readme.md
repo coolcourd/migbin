@@ -1,8 +1,8 @@
 # Migbin
 ## To get started, run the following
 ```
-mkdir ~/migration 2>/dev/null
-cd ~/migration
+mkdir ~/bin 2>/dev/null
+cd ~/bin
 git clone https://github.com/coolcourd/migbin.git
 source ~/migration/migbin/bashrc
 ```
@@ -45,6 +45,8 @@ syncs etc and mail
 imports the matching sql file from ~/migration/dbs.
 #### miginstall
 installs migbin on the source in the home directory.
+#### migratewp 
+Takes the path to a wordpress site on the source and the path to install it to one the destination.
 #### migrun
 runs a command on the server setup with the setupssh command
 
