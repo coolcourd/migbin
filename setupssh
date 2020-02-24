@@ -1,9 +1,9 @@
 #!/bin/bash
 function setupssh(){
 continueon=y
-if [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1) ]] #if a source server is already set up
+if [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1 2>/dev/null) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1 2>/dev/null) ]] #if a source server is already set up
 then
-echo "ssh is already set for $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1). would you like to setup for a diferent server?"
+echo "ssh is already set for $(head -n 1 ~/migration/migstuff/source.txt | cut -d '@' -f1 2>/dev/null). would you like to setup for a diferent server?"
 read -p "type y or n > " continueon
 fi #end if a source server is already set up
 if [[ ! $(echo $continueon | grep y) ]]; then # if they diddnt say yes
