@@ -1,0 +1,16 @@
+#!/bin/bash
+function wplive() {
+    if [[ $(echo $1) ]] && [[ $(echo $2) ]]
+    then
+    if [[ $(ls $1/wp-config.php) ]]; then
+    mkcd $2
+    premig
+    rsync -avP $1 .
+    else
+    echo please run setupssh first
+    fi
+    else
+    echo we need 2 arguments
+    fi
+}
+wplive $1 $2

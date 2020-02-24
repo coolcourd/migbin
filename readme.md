@@ -40,7 +40,8 @@ Sets WordPress site in current working directory to us https:// protocol for the
 #### mailprep
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
 #### mailsync
-Syncs over mail and etc directory from the server setup with the setupssh command
+#### miginstall
+installs migbin on the source in the home directory.
 #### migrun
 runs a command on the server setup with the setupssh command
 

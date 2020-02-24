@@ -1,0 +1,2 @@
+#!/bin/bash
+migrun git clone https://github.com/coolcourd/migbin.git
