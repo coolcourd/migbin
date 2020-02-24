@@ -1,3 +1,10 @@
 main_domain=$(uapi DomainInfo list_domains 2>/dev/null | awk '$1 ~ "main_domain:" {print $2}')
 PS1='\[\e[92m\]\u@${main_domain}\[\e[31m\]:\[\e[35m\]\w\[\e[0m\][$?] \$ '
+RED="\e[31m"
+GREEN="\e[32m"
+SET="\e[0m"
+BLINK="\e[5m"
+UNBLINK="\e[25m"
+BLUESH="\e[44m"
+SETSH="\e[49m"
 PATH=$PATH:~/migration/migbin

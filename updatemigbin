@@ -1,0 +1,3 @@
+#!/bin/bash
+cd ~/migration/migbin
+git pull

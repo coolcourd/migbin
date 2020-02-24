@@ -1,5 +1,5 @@
 #!/bin/bash
-function fixwpbs() {
+function fixwps() {
 cur_dir=$(pwd)
 if [[ $cur_dir == *"public_html"* ]]; then
 echo "working magic"
@@ -44,4 +44,4 @@ else
 echo "Please run in public_html or deeper, you are in ${cur_dir}"
 fi
 }
-fixwpbs
+fixwps
