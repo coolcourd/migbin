@@ -64,6 +64,8 @@ Takes in a list of directories to make and cds you to the last one. This uses mk
 Moves wordpress files and directories out of the current directory and into ~/premig$(date)
 #### setupssh
 This is a core function to how many others run. This function prompts you to give it a login string for a source server and will prompt you for the password. It will setup an ssh key and copy it to the source server so you can easily communicate with the source server with commands like mailsync, migrun and migsync.
+#### syncdbs
+migsyncs migraiondbs to ~/migration/dbs
 #### updatemigbin 
 Uses git pull to update all scripts to the current version on github
 #### wp

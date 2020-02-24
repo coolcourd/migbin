@@ -1,0 +1,5 @@
+#!/bin/bash
+function syncdbs() {
+    migsync migrationdbs/ ~/migration/dbs
+}
+syncdbs
