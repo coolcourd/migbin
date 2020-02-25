@@ -41,6 +41,8 @@ Sets WordPress site in current working directory to us https:// protocol for the
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
 #### mailsync
 syncs etc and mail
+#### phpver
+gives you a list of ea-php versions installed on the server and lets you pick one
 #### matchdbimport
 imports the matching sql file from ~/migration/dbs.
 #### miginstall
@@ -66,14 +68,24 @@ Takes in a list of directories to make and cds you to the last one. This uses mk
 Moves wordpress files and directories out of the current directory and into ~/premig$(date)
 #### setupssh
 This is a core function to how many others run. This function prompts you to give it a login string for a source server and will prompt you for the password. It will setup an ssh key and copy it to the source server so you can easily communicate with the source server with commands like mailsync, migrun and migsync.
+#### showphp
+checks the cgi php version running in the current directory.
 #### syncdbs
 migsyncs migraiondbs to ~/migration/dbs
+#### tempurl
+Displays the bluehost temporaryurl for the current directory.
+#### tempurl
+Sets the wordpress home and siteurl settings to the bluehost temporaryurl for the current directory.
 #### updatemigbin 
 Uses git pull to update all scripts to the current version on github
+#### whodig 
+displays dns settings for the domain you provide as the argument.
 #### wp
 This is wpcli use with --help to see help for every command
 #### wpdbimport
 Imports an sql file, as the argument, and sets up a wp-config.php file for it if there is already a wp-config file in the current directory.
+#### wpht
+corrects rewrite rules in the .htaccess
 #### wplive
 configures a wordpress site from the backup directory to it's live directory
 example:

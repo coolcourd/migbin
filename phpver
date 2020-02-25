@@ -1,0 +1,41 @@
+#!/bin/bash
+# This script will comment out all php handlers regardless of syntax
+function phpver(){
+    TODAY=$(date +%s)
+    echo "Choose a php version"
+    i=0
+    ls /usr/local/bin | grep -oP 'php\d\d' | while read x
+        do
+            echo $x | sed "s/^/$i /"
+            i=`expr $i + 1`
+        done
+    echo 'q quit'
+    read version
+    if [ "$version" -lt 8 ] 2>/dev/null
+    then
+    echo "updating"
+    cp .htaccess .htaccess${TODAY} 2>/dev/null
+    # Comment out all lines that begin with AddType or AddHandler
+    sed -i 's,^Add\(Handler\|Type\),#&,g' .htaccess 2>/dev/null
+
+    ls /usr/local/bin | grep -oP 'php\d\d' | while read x
+    do
+        if [ $i == $version ]
+        then
+        version=$(echo $x | grep -oP '\d\d')
+        echo "<IfModule mime_module>
+AddHandler application/x-httpd-ea-phpreplace .php .php7 .phtml
+</IfModule>" | sed "s/replace/$version/" > .htaccess.temp
+        cat .htaccess >> .htaccess.temp 2>/dev/null
+        mv -f .htaccess.temp .htaccess
+        fi
+        i=`expr $i + 1`
+    done
+    echo "backup made .htaccess${TODAY}"
+    else
+    echo "exited"
+    fi
+    echo "current php version is"
+    showphp
+}
+phpver

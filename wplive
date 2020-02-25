@@ -6,6 +6,7 @@ function wplive() {
     mkcd $2
     premig
     rsync -avP ${1%/}/ .
+    rsync -avP ${1%/}/ .
     matchdbimport
     fixwps
     else
