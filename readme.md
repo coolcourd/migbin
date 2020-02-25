@@ -1,10 +1,15 @@
 # Migbin
 ## To get started, run the following
 ```
-mkdir ~/bin 2>/dev/null
-cd ~/bin
-git clone https://github.com/coolcourd/migbin.git
-source ~/migration/migbin/bashrc
+if [ -d ~/bin/migbin ]; then
+    ~/bin/migbin/updatemigbin
+else
+    mkdir ~/bin 2>/dev/null
+    cd ~/bin
+    git clone https://github.com/coolcourd/migbin.git
+    source ~/bin/migbin/bashrc
+    cd -
+fi
 ```
 
 ### commands
