@@ -18,4 +18,6 @@ function mkcd() {
     done
     cd "${@: -1}"
 }
-PATH=$PATH:~/bin/migbin
+if [[ ! $(echo $PATH | grep migbin) ]]; then
+    PATH=$PATH:~/bin/migbin
+fi
