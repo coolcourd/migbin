@@ -1,3 +1,4 @@
 #!/bin/bash
 cd ~/bin/migbin
 git pull
+source ~/bin/migbin/bashrc
