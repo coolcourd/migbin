@@ -7,9 +7,9 @@ else
     mkdir ~/bin 2>/dev/null
     cd ~/bin
     git clone https://github.com/coolcourd/migbin.git
-    source ~/bin/migbin/bashrc
     cd -
 fi
+source ~/bin/migbin/bashrc
 ```
 
 ### commands
