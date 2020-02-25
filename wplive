@@ -1,19 +1,18 @@
 #!/bin/bash
 function wplive() {
-    if [[ $(echo $1) ]] && [[ $(echo $2) ]]
-    then
-    if [[ $(ls ${1%/}/wp-config.php) ]]; then
-    mkcd $2
-    premig
-    rsync -avP ${1%/}/ .
-    rsync -avP ${1%/}/ .
-    matchdbimport
-    fixwps
+    if [[ $(echo $1) ]] && [[ $(echo $2) ]]; then
+        if [[ $(ls ${1%/}/wp-config.php) ]]; then
+            mkcd $2
+            premig
+            rsync -avP ${1%/}/ .
+            rsync -avP ${1%/}/ .
+            matchdbimport
+            fixwps
+        else
+            echo There is not a wordpress site in ${1%/}/
+        fi
     else
-    echo There is not a wordpress site in ${1%/}/
-    fi
-    else
-    echo we need 2 arguments
+        echo we need 2 arguments
     fi
 }
 wplive $1 $2

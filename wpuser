@@ -1,0 +1,75 @@
+#!/bin/bash
+if [ -e wp-config.php ]; then
+  wpconn=($(awk -F"['\"]" '/DB_[PHUN]/ && /^define/{print $4}' wp-config.php))
+  DB_NAME=${wpconn[0]}
+  DB_USER=${wpconn[1]}
+  DB_PASSWORD=${wpconn[2]}
+  DB_HOST=${wpconn[3]}
+  PREFIX=$(awk -F"['\"]" '/table_prefix/ && /^\$/{print $2}' wp-config.php)
+  randnum=$(tr </dev/urandom -dc 0-9 | head -c3)
+  user="supportadmin_${randnum}"
+  pass=$(tr </dev/urandom -dc _A-Z-a-z-0-9 | head -c12)
+  while [ $# -gt 0 ]; do
+    case "$1" in
+    -n) #creates a new user
+      if [[ ! -z $2 ]]; then
+        pass="$2"
+      fi
+      mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF
+                INSERT INTO ${PREFIX}users (user_login, user_pass, user_nicename, user_email, user_registered, user_status)
+                VALUES ('$user',MD5('$pass'), 'firstname lastname', 'email@example.com', CURRENT_TIMESTAMP, '0');
+                INSERT INTO ${PREFIX}usermeta (umeta_id, user_id, meta_key, meta_value)
+                VALUES (NULL, (Select max(id) FROM ${PREFIX}users), '${PREFIX}capabilities', 'a:1:{s:13:"administrator";s:1:"1";}');
+                INSERT INTO ${PREFIX}usermeta (umeta_id, user_id, meta_key, meta_value)
+                VALUES (NULL, (Select max(id) FROM ${PREFIX}users), '${PREFIX}user_level', '10');
+EOF
+      echo -e "${GREEN}${BLINK}User Credentials${UNBLINK}${SET}"
+      echo "Username: $user"
+      echo "Password: $pass"
+      break
+      ;;
+    -l) #lists existing users
+      mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF
+                SELECT * FROM ${PREFIX}users\G
+EOF
+      break
+      ;;
+    -u) #updates provided user with a new password
+      if [[ ! -z $3 ]]; then
+        pass="$3"
+      fi
+      mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF
+                UPDATE ${DB_NAME}.${PREFIX}users SET user_pass = MD5('$pass') WHERE user_login = '$2'
+EOF
+      echo -e "${GREEN}${BLINK}User Credentials${UNBLINK}${SET}"
+      echo "Username: $2"
+      echo "Password: $pass"
+      break
+      ;;
+    -f) #finds information about the provided user
+      mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF
+                SELECT * FROM ${DB_NAME}.${PREFIX}users WHERE user_login LIKE '%${2}%'\G
+EOF
+      break
+      ;;
+    -d) #deletes the provided user
+      userid=$(mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -e "SELECT ID FROM ${DB_NAME}.${PREFIX}users WHERE user_login = '$2'\G" | cut -d":" -f2 | cut -d" " -f2 | cut -d"." -f2 | sed '/^$/d')
+      echo -n "Confirm [y/yes]: "
+      read user_confirmation
+      if [[ $user_confirmation == 'yes' ]] || [[ $user_confirmation == 'y' ]]; then
+        mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF
+                          DELETE FROM ${PREFIX}usermeta WHERE user_id = '$userid' AND meta_key = '${PREFIX}capabilities';
+                          DELETE FROM ${PREFIX}usermeta WHERE user_id = '$userid' AND meta_key = '${PREFIX}user_level';
+                          DELETE FROM ${PREFIX}users WHERE user_login = '$2';
+EOF
+        echo -e "${RED}Deleted${SET}: $2"
+      else
+        echo -e "Usage: wpuser [-n <PASSWORD>] [-l] [-u USER <PASSWORD>] [-f STRING] [-d USER]"
+      fi
+      break
+      ;;
+    esac
+  done
+else
+  echo -e "${RED}${BLINK}Issue${UNBLINK}${SET}: No WordPress Config File"
+fi
