@@ -1,14 +1,14 @@
 #!/bin/bash
 function fixwps() {
-cur_dir=$(pwd)
-if [[ $cur_dir == *"public_html"* ]]; then
-echo "working magic"
-fixall
-httpit #set urls to http
-rm -f *.ini wordfence-waf.php gd-config.php 2>/dev/null
-echo 'output_buffering = On' > php.ini
-rm -rf wp-content/cache 2>/dev/null
-echo '# BEGIN WordPress
+    cur_dir=$(pwd)
+    if [[ $cur_dir == *"public_html"* ]]; then
+        echo "working magic"
+        fixall
+        httpit #set urls to http
+        rm -f *.ini wordfence-waf.php gd-config.php 2>/dev/null
+        echo 'output_buffering = On' >php.ini
+        rm -rf wp-content/cache 2>/dev/null
+        echo '# BEGIN WordPress
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
@@ -17,31 +17,30 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.php [L]
 </IfModule>
-# END WordPress' > .htaccess #sets default .htaccess
-main=$(showphp | cut -d . -f 1)
-minor=$(showphp | cut -d . -f 2)
-combined=$(echo $main$minor)
-if [ "$combined" -lt 56 ] 2>/dev/null #checks default php version for the server. if it is less than 5.6 then it will set a handler for php56
-then
-echo "<IfModule mime_module>
+# END WordPress' >.htaccess #sets default .htaccess
+        main=$(showphp | cut -d . -f 1)
+        minor=$(showphp | cut -d . -f 2)
+        combined=$(echo $main$minor)
+        if [ "$combined" -lt 56 ] 2>/dev/null; then #checks default php version for the server. if it is less than 5.6 then it will set a handler for php56
+            echo "<IfModule mime_module>
 AddHandler application/x-httpd-ea-php56 .php .php7 .phtml
-</IfModule>" >> .htaccess
-fi
-wpconn=( $(awk -F "['\"]" "/^define\( ?'DB_[NUP]/{print \$4}" wp-config.php) ) #grabs db connection strings
-DB_NAME=${wpconn[0]}
-DB_USER=${wpconn[1]}
-DB_PASSWORD=${wpconn[2]}
-wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-chmod 700 wp-cli.phar
-prefix=$(./wp-cli.phar config list | grep prefix | cut -f2)
-rm -f wp-config.php >/dev/null
-./wp-cli.phar config create --dbname=$DB_NAME --dbuser=$DB_USER --dbpass=$DB_PASSWORD --dbprefix=$prefix #creates default config files with connection strings gathered before
-./wp-cli.phar plugin deactivate really-simple-ssl --quiet >/dev/null 2>/dev/null
-./wp-cli.phar option update upload_path ""
-rm -f wp-cli.phar
-wpht
-else
-echo "Please run in public_html or deeper, you are in ${cur_dir}"
-fi
+</IfModule>" >>.htaccess
+        fi
+        wpconn=($(awk -F "['\"]" "/^define\( ?'DB_[NUP]/{print \$4}" wp-config.php)) #grabs db connection strings
+        DB_NAME=${wpconn[0]}
+        DB_USER=${wpconn[1]}
+        DB_PASSWORD=${wpconn[2]}
+        wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        chmod 700 wp-cli.phar
+        prefix=$(./wp-cli.phar config list | grep prefix | cut -f2)
+        rm -f wp-config.php >/dev/null
+        ./wp-cli.phar config create --dbname=$DB_NAME --dbuser=$DB_USER --dbpass=$DB_PASSWORD --dbprefix=$prefix #creates default config files with connection strings gathered before
+        ./wp-cli.phar plugin deactivate really-simple-ssl --quiet >/dev/null 2>/dev/null
+        ./wp-cli.phar option update upload_path ""
+        rm -f wp-cli.phar
+        wpht
+    else
+        echo "Please run in public_html or deeper, you are in ${cur_dir}"
+    fi
 }
 fixwps

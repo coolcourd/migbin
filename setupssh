@@ -1,34 +1,33 @@
 #!/bin/bash
-function setupssh(){
-continueon=y
-if [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]] #if a source server is already set up
-then
-echo "ssh is already set for $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1). would you like to setup for a diferent server?"
-read -p "type y or n > " continueon
-fi #end if a source server is already set up
-if [[ ! $(echo $continueon | grep y) ]]; then # if they diddnt say yes
-    echo sounds good, you are all set you run commands on $(head -n 1 ~/migration/migstuff/source.txt)
+function setupssh() {
+    continueon=y
+    if [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]]; then #if a source server is already set up
+        echo "ssh is already set for $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1). would you like to setup for a diferent server?"
+        read -p "type y or n > " continueon
+    fi                                            #end if a source server is already set up
+    if [[ ! $(echo $continueon | grep y) ]]; then # if they diddnt say yes
+        echo sounds good, you are all set you run commands on $(head -n 1 ~/migration/migstuff/source.txt)
     else # if they did say yes
-sshline=$1
-if [[ $1 == '' ]]; then # if no ssh line was provided
-    read -p "provide (user@ip). > " sshline
-fi # end if no ssh line was provided
-if [[ $(ls ~/migration/migstuff/id_rsa 2>/dev/null) ]]; then #if key already exists
-    echo key exists, continuing with existing key
-else #if key doesnt exist
-    mkdir -p ~/migration/{migstuff,files,dbs}
-    ssh-keygen -f ~/migration/migstuff/id_rsa -t rsa -N '' >/dev/null
-    echo created key
-fi #end if key already exists
-echo $sshline > ~/migration/migstuff/source.txt
-ifile=$(ls ~/migration/migstuff/id_rsa)
-sourcessh="ssh -i $ifile $sshline"
-    ssh-copy-id -i ~/migration/migstuff/id_rsa.pub $sshline >/dev/null
-    if [ ! $? -eq 0 ]; then #end key was coppied to the source server
-        echo "could not coppy ssh key to remote server we ran 
+        sshline=$1
+        if [[ $1 == '' ]]; then # if no ssh line was provided
+            read -p "provide (user@ip). > " sshline
+        fi                                                           # end if no ssh line was provided
+        if [[ $(ls ~/migration/migstuff/id_rsa 2>/dev/null) ]]; then #if key already exists
+            echo key exists, continuing with existing key
+        else #if key doesnt exist
+            mkdir -p ~/migration/{migstuff,files,dbs}
+            ssh-keygen -f ~/migration/migstuff/id_rsa -t rsa -N '' >/dev/null
+            echo created key
+        fi #end if key already exists
+        echo $sshline >~/migration/migstuff/source.txt
+        ifile=$(ls ~/migration/migstuff/id_rsa)
+        sourcessh="ssh -i $ifile $sshline"
+        ssh-copy-id -i ~/migration/migstuff/id_rsa.pub $sshline >/dev/null
+        if [ ! $? -eq 0 ]; then #end key was coppied to the source server
+            echo "could not coppy ssh key to remote server we ran 
     ssh-copy-id -i ~/migration/migstuff/id_rsa.pub $sshline
-    " > ~/migration/errorlog
-    fi #end if key was coppied to the source server
-    fi # end if they diddnt say yes
+    " >~/migration/errorlog
+        fi #end if key was coppied to the source server
+    fi     # end if they diddnt say yes
 }
 setupssh

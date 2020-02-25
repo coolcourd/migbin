@@ -1,7 +1,6 @@
 #!/bin/bash
-function whodig(){
-if [ -n "$1" ]
-        then
+function whodig() {
+        if [ -n "$1" ]; then
                 echo
                 echo A record
                 ips=$(dig $1 a +short)
@@ -17,15 +16,14 @@ if [ -n "$1" ]
                 whois $1 | grep -oP 'Registrar:\s+\w+'
                 echo
                 firstiplen=$(echo $firstip | wc -m)
-                if [[ $firstiplen -gt 1 ]]
-                then
-                echo Reverse
-                dig -x $firstip | grep -A1 AUTHORITY | tail -n1 | cut -f5 | cut -d " " -f1
-                host $firstip
-                echo
+                if [[ $firstiplen -gt 1 ]]; then
+                        echo Reverse
+                        dig -x $firstip | grep -A1 AUTHORITY | tail -n1 | cut -f5 | cut -d " " -f1
+                        host $firstip
+                        echo
                 fi
         else
                 echo "usage: whodig <domain name>"
-fi
+        fi
 }
 whodig $1

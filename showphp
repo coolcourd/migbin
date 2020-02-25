@@ -2,7 +2,7 @@
 function showphp() {
   cur_dir=$(pwd)
   if [[ $cur_dir == *"public_html"* ]]; then
-    echo "<? echo phpversion();" > proservephpinfo.php
+    echo "<? echo phpversion();" >proservephpinfo.php
     chmod 644 proservephpinfo.php
     version=$(curl -s $(tempurl)proservephpinfo.php)
     rm -f proservephpinfo.php

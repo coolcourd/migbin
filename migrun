@@ -1,17 +1,16 @@
 #!/bin/bash
 function migrun() {
-    if [[ $(echo $@) ]]
-    then
-    sshline=$(head -n 1 ~/migration/migstuff/source.txt)
-    ifile=$(ls ~/migration/migstuff/id_rsa)
-    if [[ $(echo $ifile) ]]; then
-    sourcessh="ssh -i $ifile $sshline"
-    ssh -i $ifile $sshline "$@"
+    if [[ $(echo $@) ]]; then
+        sshline=$(head -n 1 ~/migration/migstuff/source.txt)
+        ifile=$(ls ~/migration/migstuff/id_rsa)
+        if [[ $(echo $ifile) ]]; then
+            sourcessh="ssh -i $ifile $sshline"
+            ssh -i $ifile $sshline "$@"
+        else
+            echo please run setupssh first
+        fi
     else
-    echo please run setupssh first
-    fi
-    else
-    echo "you diddn't run a command"
+        echo "you diddn't run a command"
     fi
 }
 migrun $@

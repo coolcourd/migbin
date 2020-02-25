@@ -1,17 +1,16 @@
 #!/bin/bash
 function migratewp() {
-    if [[ $(echo $1) ]] && [[ $(echo $2) ]]
-    then
-    mkcd $2
-    randomstr=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
-    sqlfile=$(migrun wp db export --path=$1 | tail -n 1 | cut -d"'" -f2)
-    migsync $sqlfile ~/migration/dbs
-    migrun rm -f $sqlfile
-    migsync ${1%/}/ ~/migration/files/$randomstr
-    migsync ${1%/}/ ~/migration/files/$randomstr
-    wplive ~/migration/files/$randomstr/ $2
+    if [[ $(echo $1) ]] && [[ $(echo $2) ]]; then
+        mkcd $2
+        randomstr=$(cat /dev/urandom | tr -dc 'a-z0-9' | fold -w 4 | head -n 1)
+        sqlfile=$(migrun wp db export --path=$1 | tail -n 1 | cut -d"'" -f2)
+        migsync $sqlfile ~/migration/dbs
+        migrun rm -f $sqlfile
+        migsync ${1%/}/ ~/migration/files/$randomstr
+        migsync ${1%/}/ ~/migration/files/$randomstr
+        wplive ~/migration/files/$randomstr/ $2
     else
-    echo we need 2 arguments path on source, path on destination
+        echo we need 2 arguments path on source, path on destination
     fi
 }
 migratewp $1 $2

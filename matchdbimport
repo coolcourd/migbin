@@ -1,16 +1,16 @@
 #!/bin/bash
 function matchdbimport() {
-dbname=$(wp config get DB_NAME)
+    dbname=$(wp config get DB_NAME)
     sqlresults=$(ls ~/migration/dbs/$dbname* | wc -w)
     if [[ $(echo $sqlresults) == 1 ]]; then
-    sqlfile=$(ls ~/migration/dbs/$dbname*)
-    wpdbimport $sqlfile
+        sqlfile=$(ls ~/migration/dbs/$dbname*)
+        wpdbimport $sqlfile
     else
         if [[ $(echo $sqlresults) == 0 ]]; then
-        echo there is no sql file for this directory
+            echo there is no sql file for this directory
         else
-        echo there are multiple sqlfiles for this directory
-        echo $sqlfile
+            echo there are multiple sqlfiles for this directory
+            echo $sqlfile
         fi
     fi
 }

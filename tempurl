@@ -2,21 +2,20 @@
 function tempurl() {
     user=$(whoami) || user=$1
     if [[ ! -f /var/cpanel/users/$user ]]; then
-    echo No access to user "'$user'"!
+        echo No access to user "'$user'"!
     else
-    boxNum=$(hostname | awk 'BEGIN {FS = "."} ; {print $1}')
-    acctIP=$(grep IP /var/cpanel/users/$user|sed "s|IP=||")
-    url=http://$acctIP
-    url=$url/~$user
-    cur_dir=$(pwd)
-    bluerock="http://${boxNum}.temp.domains/~$(whoami)${cur_dir#*public_html}/"
-    curl -s $bluerock > /dev/null
-    if [[ $? == 0 ]]
-    then
-        echo $bluerock
-    else
-        echo $url${cur_dir#*public_html}/
-    fi
+        boxNum=$(hostname | awk 'BEGIN {FS = "."} ; {print $1}')
+        acctIP=$(grep IP /var/cpanel/users/$user | sed "s|IP=||")
+        url=http://$acctIP
+        url=$url/~$user
+        cur_dir=$(pwd)
+        bluerock="http://${boxNum}.temp.domains/~$(whoami)${cur_dir#*public_html}/"
+        curl -s $bluerock >/dev/null
+        if [[ $? == 0 ]]; then
+            echo $bluerock
+        else
+            echo $url${cur_dir#*public_html}/
+        fi
     fi
 }
 tempurl
