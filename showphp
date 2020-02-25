@@ -1,0 +1,14 @@
+#!/bin/bash
+function showphp() {
+  cur_dir=$(pwd)
+  if [[ $cur_dir == *"public_html"* ]]; then
+    echo "<? echo phpversion();" > proservephpinfo.php
+    chmod 644 proservephpinfo.php
+    version=$(curl -s $(tempurl)proservephpinfo.php)
+    rm -f proservephpinfo.php
+    echo -e "${GREEN} $version"
+  else
+    echo "Please run in public_html or deeper, you are in ${cur_dir}"
+  fi
+}
+showphp
