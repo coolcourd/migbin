@@ -1,0 +1,14 @@
+#!/bin/bash
+if [[ -f wp-config.php ]]; then
+    wpconn=($(awk -F"['\"]" '/DB_[PHUN]/ && /^define/{print $4}' wp-config.php))
+    prefix=$(awk -F"['\"]" '/table_prefix/ && /^\$/{print $2}' wp-config.php)
+    version=$(grep -i "wp_version =" wp-includes/version.php | cut -d"'" -f2)
+    echo -e "${GREEN}Database${SET}: ${wpconn[0]}"
+    echo -e "${GREEN}User${SET}: ${wpconn[1]}"
+    echo -e "${GREEN}Password${SET}: ${wpconn[2]}"
+    echo -e "${GREEN}Host${SET}: ${wpconn[3]}"
+    echo -e "${GREEN}TablePrefix${SET}: $prefix"
+    echo -e "${GREEN}WP Version${SET}: $version"
+else
+    echo "no wordpress configuration found.."
+fi
