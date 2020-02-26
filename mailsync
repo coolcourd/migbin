@@ -1,5 +1,5 @@
 #!/bin/bash
-migsync etc ~/etc
-migsync etc ~/etc
-migsync mail ~/mail
-migsync mail ~/mail
+migsync etc/ ~/etc
+migsync etc/ ~/etc
+migsync mail/ ~/mail
+migsync mail/ ~/mail
