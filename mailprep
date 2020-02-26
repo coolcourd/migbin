@@ -20,6 +20,8 @@ function mailprep() {
                 echo "set password for $email"
                 else
                 echo "error creating $email"
+                echo uapi Email add_pop email=$user password=$pass quota=0 domain=$domain skip_update_db=1
+                uapi Email add_pop email=marc password=Tyboy1990 quota=0 domain=TheWillsonCompany.com skip_update_db=1 | grep -n1 error | tail -n 1 | cut -d '-' -f3
             fi
     fi
     done
