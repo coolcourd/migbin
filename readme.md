@@ -93,6 +93,8 @@ This is wpcli use with --help to see help for every command
 Imports an sql file, as the argument, and sets up a wp-config.php file for it if there is already a wp-config file in the current directory.
 #### wpht
 corrects rewrite rules in the .htaccess
+#### wpinfo
+Displays info about te wordpress site in the current dir.
 #### wplive
 configures a wordpress site from the backup directory to it's live directory
 example:
