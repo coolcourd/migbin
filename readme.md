@@ -59,6 +59,8 @@ runs a command on the server setup with the setupssh command
 
 example: 
 * migrun ls migrationdbs
+#### migssh
+Logs in to the source server
 #### migsync
 rsyncs from the source server with first argument to the logged in server as the second argument.
 examples: 
