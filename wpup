@@ -1,0 +1,62 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+echo "
+Sets variables in wp-config.php
+flags:
+-h dbhost
+-u dbuser
+-d dbname
+-p dbpass
+-f prefix
+-g debug
+	"
+else
+	if [[ -f wp-config.php ]]; then
+		while [ $# -gt 0 ]; do
+			case "$1" in
+			-h) #updates host
+				echo -e "${RED}OLD HOST${SET}: $(wp config get DB_HOST)"
+				wp config set DB_HOST $2
+				echo -e "${GREEN}NEW HOST${SET}: $2"
+				break
+				;;
+			-u) #updates user
+				echo -e "${RED}OLD USER${SET}: $(wp config get DB_USER)"
+				wp config set DB_USER $2
+				echo -e "${GREEN}NEW USER${SET}: $2"
+				break
+				;;
+			-d) #updates the database name
+				echo -e "${RED}OLD DB${SET}: $(wp config get DB_NAME)"
+				wp config set DB_NAME $2
+				echo -e "${GREEN}NEW DB${SET}: $2"
+				break
+				;;
+			-p) #updates the password
+				echo -e "${RED}OLD PASSWORD${SET}: $(wp config get DB_PASSWORD)"
+				wp config set DB_PASSWORD $2
+				echo -e "${GREEN}NEW PASSWORD${SET}: $2"
+				break
+				;;
+			-f) #updates table prefix
+				echo -e "${RED}OLD PREFIX${SET}: $(wp config get table_prefix)"
+				wp config set table_prefix $2
+				echo -e "${GREEN}NEW PREFIX${SET}: $2"
+				break
+				;;
+			-g) #updates debug
+				echo -e "${RED}OLD DEBUG${SET}: $(wp config get WP_DEBUG)"
+				wp config set WP_DEBUG $2 --raw --add
+				echo -e "${GREEN}NEW DEBUG${SET}: $2"
+				break
+				;;
+			*)
+				echo -e "${BLINK}${GREEN}USAGE${SET}${UNBLINK}: $0 [-h HOST] [-u USER] [-p PASS] [-f PREFIX]"
+				;;
+			esac
+		done
+	else
+		echo "no wordpress configuration found.."
+	fi
+
+fi
