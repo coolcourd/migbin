@@ -43,9 +43,10 @@ Sets WordPress site in current working directory to us http:// protocol for the 
 #### httpsit
 Sets WordPress site in current working directory to us https:// protocol for the home and siteurl options.
 #### mailprep
-Takes migimap lines and makes imap accounts.
-#### mailprep
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
+
+Imap lines look like this:
+source-imap-mailserver source-email-address source-password destination-imap-mailserver destination-email-address destination-password
 #### mailsync
 syncs etc and mail
 #### phpver
