@@ -46,7 +46,7 @@ else
 				;;
 			-g) #updates debug
 				echo -e "${RED}OLD DEBUG${SET}: $(wp config get WP_DEBUG)"
-				wp config set WP_DEBUG $2 --raw --add
+				wp config set WP_DEBUG $2 --raw --add --type=constant
 				echo -e "${GREEN}NEW DEBUG${SET}: $2"
 				break
 				;;
