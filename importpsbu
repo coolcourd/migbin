@@ -1,0 +1,23 @@
+#!/bin/bash
+if [[ $cur_dir == *"public_html"* ]]; then
+    if [ -z "$1" ]; then
+        echo "no url provided"
+    else
+        premig
+        bash <(echo wget $1)
+        mkdir ~/migration 2>/dev/null
+        cp psbu.tar ~/migration/psbu$(ls ~/migration/psbu* | wc -l).tar 2>/dev/null
+    fi
+    if [ -f psbu.tar ]; then
+        tar -xf psbu.tar
+        rm -f psbu.tar
+        rm -f createbackup.php
+        wpdbimport psdb.sql
+        rm -f psdb.sql
+        fixwps
+    else
+        echo there is no psbu.tar
+    fi
+else
+    echo "Please run in public_html or deeper, you are in ${cur_dir}"
+fi

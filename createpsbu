@@ -1,0 +1,9 @@
+#!/bin/bash
+if [[ -f wp-config.php ]]; then
+    sqlfile=$(wp db export | tail -n 1 | cut -d"'" -f2)
+    mv $sqlfile psdb.sql
+    tar -cf psbu.tar .
+    rm -f psdb.sql
+else
+    echo -e "${RED}${BLINK}Issue${UNBLINK}${SET}: No WordPress Config File"
+fi
