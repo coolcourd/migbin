@@ -14,6 +14,8 @@ source ~/bin/migbin/bashrc
 
 ### commands
 ---
+#### createpsbu
+Makes a backup of the wordpress site called psbu.tar
 #### exportdbs
 prompts you for the cpanel password and then exports all databases placing them in ~/migration/dbs
 run without args to export all dbs after cpanel password prompt
@@ -42,6 +44,8 @@ Builds an outline of all wordpress sites on the account and saves to ~/migration
 Sets WordPress site in current working directory to us http:// protocol for the home and siteurl options.
 #### httpsit
 Sets WordPress site in current working directory to us https:// protocol for the home and siteurl options.
+#### importpsbu
+Imports a psbu db and all.
 #### mailprep
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
 
