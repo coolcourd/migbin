@@ -52,6 +52,8 @@ syncs etc and mail
 gives you a list of ea-php versions installed on the server and lets you pick one
 #### matchdbimport
 imports the matching sql file from ~/migration/dbs.
+#### mig
+Creates two directories, ~/migration/files and ~/migration/dbs. This is used to store migration backups on a server.
 #### miginstall
 installs migbin on the source in the home directory.
 #### migratewp 
