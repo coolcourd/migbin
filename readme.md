@@ -108,6 +108,8 @@ Displays info about te wordpress site in the current dir.
 configures a wordpress site from the backup directory to it's live directory
 example:
 * wplive ~/migration/files/ ~/public_html
+#### wpup
+Updates wp-config.php variables in the current dir.
 #### wpurl
 Lets you read and/or set the home and/or siteurl option for the wordpress site in the current directory.
 
