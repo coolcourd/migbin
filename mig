@@ -1,8 +1,6 @@
 #!/bin/bash
 
 function mig() {
-	mkdir -p ~/migration
-	mkdir -p ~/migration/files
-	mkdir -p ~/migration/dbs
+	mkdir -p ~/migration/{files,dbs}
 	cd ~/migration/files
 }
