@@ -1,0 +1,12 @@
+#!/bin/bash
+function host_file () {
+export cPuser=$(stat -c %U .)
+  if [[ ! -e /var/cpanel/users/${cPuser} ]]
+   then  echo "No user directory found."
+    (exit 1)
+  else cpUdata=$(grep -Rl -P "(?<=documentroot:\s)${PWD}$" /var/cpanel/userdata/${cPuser}/ )
+        cpDomain=$(grep -oPh '\smail\.\K([\w\.\-]+)[a-z]' ${cpUdata} | sort -u )
+        cpIP=$(grep -oP '(?<=^IP\=)\S+' /var/cpanel/users/${cPuser})
+       for x in $cpDomain; do echo -E "$cpIP ${x} www.${x}"; done
+  fi
+}
