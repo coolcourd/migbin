@@ -1,6 +1,0 @@
-#!/bin/bash
-
-function mig() {
-	mkdir -p ~/migration/{files,dbs}
-	cd ~/migration/files
-}
