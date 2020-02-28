@@ -52,7 +52,10 @@ Prompts you for a list of imap lines and creates email accounts for you. Does no
 Imap lines look like this:
 source-imap-mailserver source-email-address source-password destination-imap-mailserver destination-email-address destination-password
 #### mailsync
-syncs etc and mail
+syncs etc and mail. can be used to sync an individual domain.
+example: 
+* mailsync # syncs all mail
+* mailsync example.com # syncs only mail for example.com
 #### phpver
 gives you a list of ea-php versions installed on the server and lets you pick one
 #### matchdbimport
