@@ -20,6 +20,10 @@ function mkcd() {
     done
     cd "${@: -1}"
 }
+function mig() {
+	mkdir -p ~/migration/{files,dbs}
+	cd ~/migration/files
+}
 if [[ ! $(echo $PATH | grep migbin) ]]; then
     PATH=$PATH:~/bin/migbin
 fi
