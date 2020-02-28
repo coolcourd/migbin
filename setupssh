@@ -1,7 +1,7 @@
 #!/bin/bash
 function setupssh() {
     continueon=y
-    if [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]]; then #if a source server is already set up
+    if [ -e ~/migration/migstuff/id_rsa ] && [[ $(migrun whoami 2>/dev/null) -eq $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]] && [[ $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1) ]]; then #if a source server is already set up
         echo "ssh is already set for $(head -n 1 ~/migration/migstuff/source.txt 2>/dev/null | cut -d '@' -f1). would you like to setup for a diferent server?"
         read -p "type y or n > " continueon
     fi                                            #end if a source server is already set up
