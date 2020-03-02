@@ -27,3 +27,4 @@ function mig() {
 if [[ ! $(echo $PATH | grep migbin) ]]; then
     PATH=$PATH:~/bin/migbin
 fi
+cat ~/bin/migbin
