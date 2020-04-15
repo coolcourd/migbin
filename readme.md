@@ -31,7 +31,7 @@ Runs a find for wordpress sites in public_html and imports the matching sql file
 #### fixall
 Runs both fixfiles and fixdirs
 #### fixallwps
-Runs a find and replace in public_html and uses fixwps on all wordpress installs
+Runs a find in public_html and uses fixwps on all wordpress installs
 #### fixdirs
 Runs from current directory and recursivly sets all directories to 755.
 #### fixfiles
