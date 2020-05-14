@@ -1,0 +1,84 @@
+#!/bin/bash
+
+function help() {
+	echo -e '
+
+Prompts for a list of urls to WordPress backup files and installs the site in the current directory.
+
+example usage:
+$ free_wordpress --wp-version="5.3.3" --php-version="7.3"
+
+options:
+-h --help : displays this message
+-w --wordpress-version : sets the wordpress version of the install
+-p --php-version : sets the php version of the install
+'
+	exit 0
+}
+
+for i in "$@"
+do
+case $i in
+    -w=*|--wp-version=*)
+    wp_version="${i#*=}"
+    ;;
+    -p=*|--php-version=*)
+    php_version="${i#*=}"
+    ;;
+	-h|--help)
+    help
+    ;;
+esac
+done
+
+function downloadSignedLinks() {
+	echo 'Paste in backup file urls 1 per line. Press ctrl d when done.'
+	links=$(cat)
+	echo 'please wait'
+	for x in $links
+	do
+		echo $x
+	done
+	echo 'please wait'
+}
+
+function download_wordpress() {
+	tarname=$1
+	wget -q https://wordpress.org/$tarname > /dev/null
+	expectedhash=$(curl -s https://wordpress.org/$tarname.md5)
+	filehash=$(md5sum $tarname 2>/dev/null | cut -d ' ' -f1)
+	if [[ "$filehash" == "$expectedhash" ]]; then
+		return 0
+	else
+		echo "the hash did not match"
+		echo recieved $filehash
+		echo expected $expectedhash
+		rm $tarname 2>/dev/null
+		exit 1
+	fi
+}
+
+function safetyCheck() {
+    if [[ $(pwd) != *"public_html"* ]]; then
+		echo "Please run in public_html or deeper. Ideally an empty directory. You are in $(pwd)"
+		exit 1
+	fi
+	if [[ $(ls index.* 2>/dev/null) ]] || [[ $(ls wp-content 2>/dev/null) ]]; then
+        echo there is already a site here
+		exit 1
+	fi
+}
+
+
+safetyCheck
+downloadSignedLinks
+if [ "$wp_version" == "" ]; then
+	download_wordpress latest.tar.gz
+else
+	wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
+	if [ "$wp_version_check" == "" ]; then
+		echo "That WordPress version does not look right"
+	else
+		download_wordpress wordpress-$wp_version.tar.gz
+	fi
+fi

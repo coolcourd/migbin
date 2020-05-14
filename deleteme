@@ -1,0 +1,137 @@
+#!/bin/bash
+
+function importdb() {
+#It could explicitly run with the latest php version on the server to ensure that wpcli will still run on servers with default cli php lower than 5.6
+cpuser="$(stat -c %U .)"
+pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
+dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
+name="${cpuser}_${dbstuff}"
+uapi Mysql create_database name=$name 1>/dev/null
+uapi Mysql create_user name=$name password=$pass 1>/dev/null
+uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
+echo "dbname and user: ${name} password: ${pass}"
+prefix=$(grep table_prefix $2/manifest.json | cut -d '"' -f4)
+./wp-cli.phar config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix > /dev/null 2>&1
+./wp-cli.phar db import $1 > /dev/null 2>&1
+}
+
+
+function setphp() {
+    phpversion=$(echo $1 | cut -d '"' -f4 | head -n 1 | tr -d . | grep -o .. | head -n1)
+    if [[ $(ls /usr/local/bin/ea-php56) ]]; then
+    echo "
+    <IfModule mime_module>
+AddHandler application/x-httpd-ea-php$phpversion .php .php7 .phtml
+</IfModule>" >> .htaccess
+    else
+    echo "php version is not installed on this server. Leaving default version"
+    fi
+}
+
+function tempurl() {
+    user=$(whoami)
+    if [[ ! -f /var/cpanel/users/$user ]]; then
+    echo No access to user "'$user'"!
+    else
+    boxNum=$(hostname | awk 'BEGIN {FS = "."} ; {print $1}')
+    acctIP=$(grep IP /var/cpanel/users/$user|sed "s|IP=||")
+    url=http://$acctIP
+    url=$url/~$user
+    cur_dir=$(pwd)
+    bluerock="http://${boxNum}.temp.domains/~$(whoami)${cur_dir#*public_html}"
+    curl -s $bluerock > /dev/null
+    if [[ $? == 0 ]]
+    then
+        echo $bluerock
+    else
+        echo $url${cur_dir#*public_html}
+    fi
+    fi
+}
+
+function tempurlit() {
+    ./wp-cli.phar search-replace $(./wp-cli.phar option get home 2>/dev/null | cut -d':' -f2) $(tempurl | cut -d':' -f2) > /dev/null 2>&1
+    ./wp-cli.phar search-replace https:// http:// > /dev/null 2>&1
+    echo -e "apache_modules:\n - mod_rewrite" > wp-cli.yml
+    ./wp-cli.phar rewrite flush --hard > /dev/null 2>&1
+    sleep 1
+    rm -f wp-cli.yml
+}
+
+function launchsite(){
+    thisdir=$(pwd)
+    if [[ $thisdir == *"public_html"* ]]; then
+        if [[ $(ls index.* 2>/dev/null) ]] || [[ $(ls wp-content 2>/dev/null) ]]; then
+        echo there is already a site here
+        else
+            if [[ $1 == '-h' ]]; then
+            echo
+            echo "usage (run in directory you are migrating to)"
+            echo "launchsite"
+            echo "or"
+            echo "launchsite path/to/zip"
+            echo
+            else
+            pathtobackupdir=$1
+                if [[ $1 == '' ]]; then
+                read -p "provide path/to/zips. > " pathtobackupdir
+                fi
+                if [[ $(ls $pathtobackupdir 2>/dev/null) ]]; then
+                    if [[ $(ls $pathtobackupdir/manifest.json 2>/dev/null) ]]; then
+                        if [[ $(ls $pathtobackupdir/*.zip | grep plugins) ]] && [[ $(ls $pathtobackupdir/*.zip | grep themes) ]]; then
+                        wget -q https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+                        chmod 700 wp-cli.phar
+                        wpversion=$(grep wp_ver ~/Launch-Site/backup/manifest.json | cut -d '"' -f4 | head -n 1)
+                        phpversion=$(grep php_ver $pathtobackupdir/manifest.json | cut -d '"' -f4 | head -n 1)
+                        tarname=wordpress-$wpversion.tar.gz
+                        wget -q https://wordpress.org/$tarname > /dev/null #could check against hash
+                        if [[ $? -eq 0 ]]
+                        then
+                        tar --strip-components=1 -xzf $tarname > /dev/null
+                            if [[ $? -eq 0 ]]
+                            then
+                            rm -f $tarname
+                            mkdir wp-content/{plugins,mu-plugins,uploads}
+                            echo unziping your backup
+                            unzip -o $pathtobackupdir/*mu-plugins.zip -d wp-content/mu-plugins
+                            unzip -o $(ls -1 ~/Launch-Site/backup/*plugins.zip | grep -v mu-plugin) -d wp-content/uploads
+                            unzip -o $pathtobackupdir/*themes.zip -d wp-content/themes
+                            unzip -o $pathtobackupdir/*db.zip -d wp-content
+                            ls -1 $pathtobackupdir/*uploads.zip | while read x
+                                do 
+                                unzip -o $x -d wp-content/uploads
+                            done
+
+                                if [[ $? -eq 0 ]]
+                                then
+                                echo importing the db wp-content/*.sql
+                                importdb wp-content/*.sql $pathtobackupdir
+                                tempurlit
+                                setphp $phpversion
+                                ./wp-cli.phar option get home 2>/dev/null
+                                rm -f wp-cli.phar wp-content/*.sql
+                                else
+                                echo backup zip extraction failed
+                                fi
+                            else
+                            echo wordpress tar extraction failed
+                            fi
+                            else
+                        echo wordpress tar download failed
+                        fi
+                        else
+                        echo Sorry, there are no wp-content zip files in that directory
+                        fi
+                    else
+                    echo there is no manifest.json file
+                    fi
+                else
+                echo Sorry, file does not exist
+                fi
+            fi
+        fi
+    else
+    echo "Please run in public_html or deeper Ideally an empty directory since the site will be moved here, you are in ${thisdir}"
+    fi
+}
+launchsite $1
