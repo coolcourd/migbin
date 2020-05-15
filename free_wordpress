@@ -10,9 +10,161 @@ $ free_wordpress --wp-version="5.3.3" --php-version="7.3"
 
 options:
 -h --help : displays this message
+-t --test : runs automated testing on the functions in this file.
 -w --wordpress-version : sets the wordpress version of the install
 -p --php-version : sets the php version of the install
 '
+	exit 0
+}
+
+function downloadSignedLinks() {
+	echo 'Paste in backup file urls 1 per line. Press ctrl d when done.'
+	links=$(cat)
+	for x in $links
+	do
+		echo -e "
+downloading $x
+"
+		filename=$(echo $x | grep -oE \(mu-p\)\?[a-z]+\.zip)
+		wget -t=3 $x -O $filename
+		if [ $? != 0 ]; then
+			echo "could not download $x"; exit 1
+		fi
+	done
+	echo 'All backup files have been successfully downloaded'
+}
+
+function download_wordpress() {
+	tarname=$1
+			echo -e "
+downloading $tarname
+"
+	wget -t=3 https://wordpress.org/$tarname > /dev/null
+	expectedhash=$(curl -s https://wordpress.org/$tarname.md5)
+	filehash=$(md5sum $tarname 2>/dev/null | cut -d ' ' -f1)
+	if [[ "$filehash" == "$expectedhash" ]]; then
+		# tar -xf --strip-components 1 $tarname  # doesnt work on mac
+		tar -xf $tarname
+		mv wordpress/* .
+		rmdir wordpress
+		rm $tarname 2>/dev/null
+		return 0
+	else
+		echo "the hash did not match"
+		echo recieved $filehash
+		echo expected $expectedhash
+		rm $tarname 2>/dev/null
+		exit 1
+	fi
+}
+
+function safetyCheck() {
+    if [[ $(pwd) != *"public_html"* ]]; then
+		echo "Please run in public_html or deeper. Ideally an empty directory. You are in $(pwd)"; exit 1
+	fi
+	if [[ $(ls index.* 2>/dev/null) ]] || [[ $(ls wp-content 2>/dev/null) ]]; then
+        echo 'There is already a site here'; exit 1
+	fi
+}
+function extractZip() {
+	unzip -o $1 -d $2
+	if [ $? -ne 0 ]; then
+		timestamp=$(date +%s)
+		mv $1 ~/$timestamp-$1
+		echo "there was trouble extracting ~/$timestamp-$1 to $2" >> ~/migration-error-log
+	else
+		rm $1
+	fi
+}
+
+function extractZips() {
+	for i in $(ls -1 *.zip)
+do
+case $i in
+    plugins*)
+	extractZip $i 'wp-content/plugins'
+    ;;
+    mu-plugins*)
+	extractZip $i 'wp-content/mu-plugins'
+    ;;
+	uploads*)
+	extractZip $i 'wp-content/uploads'
+    ;;
+	themes*)
+	extractZip $i 'wp-content/themes'
+    ;;
+	db*)
+	extractZip $i 'wp-content'
+    ;;
+esac
+done
+}
+
+function main() {
+safetyCheck
+downloadSignedLinks
+if [ "$wp_version" == "" ]; then
+	download_wordpress latest.tar.gz
+else
+	wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
+	if [ "$wp_version_check" == "" ]; then
+		echo "That WordPress version does not look right"
+	else
+		download_wordpress wordpress-$wp_version.tar.gz
+		extractZips
+	fi
+fi
+cat ~/migration-error-log 2>/dev/null
+}
+
+function test() {
+	# setup test env
+	mkdir /tmp/public_html
+	echo testing > /tmp/public_html/free-wordpress
+	if [ $? -ne 0 ]; then
+		echo tests cannot be ran on this environment. No access to /tmp
+		exit 1
+	fi
+	rm -rf /tmp/public_html
+	cd /tmp/
+
+	# test that cannot install outside of public_html
+	echo testing safetyCheck
+	exited=$(safetyCheck)
+	if [[ $(echo $exited | grep Please) ]]; then
+		echo 'passed safetyCheck test 1'
+	else
+		>&2 echo "Safety check allowed install outsite of public_html"; exit 1
+	fi
+
+	# test that can install inside a clean public_html
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	exited=$(safetyCheck)
+	cd /tmp
+	rmdir /tmp/public_html
+	if [[ $(echo $exited | grep 'site here') ]]; then
+		>&2 echo 'Safety check did not allow install under good conditions'; exit 1
+	else
+		echo 'passed safetyCheck test 2'
+	fi
+
+	# test that cannot install when there is a site
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	touch index.php
+	exited=$(safetyCheck)
+	cd /tmp
+	rm -rf /tmp/public_html
+	if [[ $(echo $exited | grep 'site here') ]]; then
+		echo 'passed safetyCheck test 3'
+	else
+		>&2 echo 'Safety check allowed install in a directory containing an index file'; exit 1
+	fi
+
+
+	# close out tests
+	echo all tests passed
 	exit 0
 }
 
@@ -28,57 +180,10 @@ case $i in
 	-h|--help)
     help
     ;;
+	-t|--test)
+    test
+    ;;
 esac
 done
 
-function downloadSignedLinks() {
-	echo 'Paste in backup file urls 1 per line. Press ctrl d when done.'
-	links=$(cat)
-	echo 'please wait'
-	for x in $links
-	do
-		echo $x
-	done
-	echo 'please wait'
-}
-
-function download_wordpress() {
-	tarname=$1
-	wget -q https://wordpress.org/$tarname > /dev/null
-	expectedhash=$(curl -s https://wordpress.org/$tarname.md5)
-	filehash=$(md5sum $tarname 2>/dev/null | cut -d ' ' -f1)
-	if [[ "$filehash" == "$expectedhash" ]]; then
-		return 0
-	else
-		echo "the hash did not match"
-		echo recieved $filehash
-		echo expected $expectedhash
-		rm $tarname 2>/dev/null
-		exit 1
-	fi
-}
-
-function safetyCheck() {
-    if [[ $(pwd) != *"public_html"* ]]; then
-		echo "Please run in public_html or deeper. Ideally an empty directory. You are in $(pwd)"
-		exit 1
-	fi
-	if [[ $(ls index.* 2>/dev/null) ]] || [[ $(ls wp-content 2>/dev/null) ]]; then
-        echo there is already a site here
-		exit 1
-	fi
-}
-
-
-safetyCheck
-downloadSignedLinks
-if [ "$wp_version" == "" ]; then
-	download_wordpress latest.tar.gz
-else
-	wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
-	if [ "$wp_version_check" == "" ]; then
-		echo "That WordPress version does not look right"
-	else
-		download_wordpress wordpress-$wp_version.tar.gz
-	fi
-fi
+main
