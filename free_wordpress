@@ -175,6 +175,7 @@ function main() {
 	extractZips
 	rm -f wp-config-sample.php
 	wpdbi wp-content/database.sql
+	wp config set WP_AUTO_UPDATE_CORE false --raw --add --type=constant
 	setPrefix wp-content/database.sql
 	timestamp=$(date +%s)
 	mv wp-content/database.sql ~/.$timestamp-database.sql
