@@ -69,8 +69,7 @@ function safetyCheck() {
 function extractZip() {
 	unzip -o $1 -d $2
 	if [ $? -ne 0 ]; then
-		timestamp=$(date +%s)
-		echo "there was trouble extracting ~/$timestamp-$1 to $2" >> ~/migration-error-log
+		echo "there was trouble extracting ~/$1 to $2" >> ~/migration-error-log
 		echo "failed operation was 'unzip -o $1 -d $2'" >> ~/migration-error-log
 	else
 		rm $1
@@ -104,6 +103,42 @@ esac
 done
 }
 
+function setPrefix() {
+	options_table=$(grep -ioPm 1 'create table `.+options`' $1 | cut -d '`' -f2)
+	if [ $? != 0 ]; then
+		echo "could not detect table prefix take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
+		return 1
+	fi
+	prefix="${options_table::${#options_table}-7}"
+	wp config set table_prefix $prefix
+}
+
+function wpfix() {
+	find -type d -exec chmod 755 {} \; &
+	find -type f -exec chmod 644 {} \; &
+	rm -f *.ini wordfence-waf.php gd-config.php 2>/dev/null
+	echo 'output_buffering = On' >php.ini
+	echo '# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress' >.htaccess
+wpht
+}
+
+function setPhp() {
+	if [ "$php_version" != "" ] {
+		echo "<IfModule mime_module>
+AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
+</IfModule>" >> .htaccess
+	}
+}
+
 function main() {
 	safetyCheck
 	if [ "$wp_version" == "" ]; then
@@ -121,13 +156,14 @@ function main() {
 	fi
 	extractZips
 	mv wp-config-sample.php wp-config.php
-	wpdbimport wp-content/database.sql
-	wp config set table_prefix design_
-	setting url
+	wpdbimport wp-content/database.sql #bring this func in
+	timestamp=$(date +%s)
+	mv wp-content/database.sql ~/.$timestamp-database.sql
+	setPrefix wp-content/database.sql
 	wp option set home $(tempurl)
 	wp option set siteurl $(tempurl)
-	fixwps
-	wp option get home
+	setPhp
+	wpfix
 	echo
 	cat ~/migration-error-log 2>/dev/null
 	rm -f ~/migration-error-log 2>/dev/null
