@@ -66,6 +66,7 @@ function safetyCheck() {
         echo 'There is already a site here'; exit 1
 	fi
 }
+
 function extractZip() {
 	unzip -o $1 -d $2
 	if [ $? -ne 0 ]; then
@@ -141,6 +142,21 @@ AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
 	fi
 }
 
+function wpdbi() {
+	cpuser="$(stat -c %U .)"
+	pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
+	prefix="$(wp config get table_prefix)"
+	dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
+	name="${cpuser:0:8}_${dbstuff}"
+	uapi Mysql create_database name=$name 1>/dev/null
+	uapi Mysql create_user name=$name password=$pass 1>/dev/null
+	uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
+	echo "name ${name} password ${pass} user ${name}"
+	wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix
+	wp config set WP_DEBUG false --type=variable
+	mysql --user=$name -f --password=$pass $name <$1 2>/dev/null
+}
+
 function main() {
 	safetyCheck
 	if [ "$wp_version" == "" ]; then
@@ -157,8 +173,8 @@ function main() {
 		fi
 	fi
 	extractZips
-	mv wp-config-sample.php wp-config.php
-	wpdbimport wp-content/database.sql
+	rm -f wp-config-sample.php
+	wpdbi wp-content/database.sql
 	setPrefix wp-content/database.sql
 	timestamp=$(date +%s)
 	mv wp-content/database.sql ~/.$timestamp-database.sql
