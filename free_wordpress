@@ -156,10 +156,10 @@ function main() {
 	fi
 	extractZips
 	mv wp-config-sample.php wp-config.php
-	wpdbimport wp-content/database.sql #bring this func in
+	wpdbimport wp-content/database.sql
+	setPrefix wp-content/database.sql
 	timestamp=$(date +%s)
 	mv wp-content/database.sql ~/.$timestamp-database.sql
-	setPrefix wp-content/database.sql
 	wp option set home $(tempurl)
 	wp option set siteurl $(tempurl)
 	setPhp
