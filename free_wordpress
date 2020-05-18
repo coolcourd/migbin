@@ -25,7 +25,7 @@ function downloadSignedLinks() {
 		echo -e "
 downloading $x
 "
-		filename=$(echo $x | grep -oE \(mu-p\)\?[a-z]+\.zip)
+		filename=$(echo $x | grep -oP \(mu-p\)\?[a-z]+\.zip)
 		wget -t3 $x -O $filename
 		if [ $? != 0 ]; then
 			echo "could not download $x"; exit 1
@@ -110,7 +110,7 @@ function main() {
 		downloadSignedLinks
 		download_wordpress latest.tar.gz
 	else
-		wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
+		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$)
 		if [ "$wp_version_check" == "" ]; then
 			echo "That WordPress version does not look right '$wp_version'"
 			exit 1
