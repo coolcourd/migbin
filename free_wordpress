@@ -166,7 +166,7 @@ function main() {
 	wp option set siteurl $(tempurl)
 	wpfix
 	setPhp
-	echo -e'
+	echo -e '
 	migration complete'
 	wp option get home
 	cat ~/migration-error-log 2>/dev/null
