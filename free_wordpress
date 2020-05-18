@@ -101,11 +101,11 @@ case $i in
     ;;
 esac
 done
+function setPrefix() {
 }
 
-function setPrefix() {
 	options_table=$(grep -ioPm 1 'create table `.+options`' $1 | cut -d '`' -f2)
-	if [ $? != 0 ]; then
+	if [ $? -ne 0 ]; then
 		echo "could not detect table prefix take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
 		return 1
 	fi
@@ -157,9 +157,9 @@ function main() {
 	extractZips
 	mv wp-config-sample.php wp-config.php
 	wpdbimport wp-content/database.sql #bring this func in
+	setPrefix wp-content/database.sql
 	timestamp=$(date +%s)
 	mv wp-content/database.sql ~/.$timestamp-database.sql
-	setPrefix wp-content/database.sql
 	wp option set home $(tempurl)
 	wp option set siteurl $(tempurl)
 	setPhp
