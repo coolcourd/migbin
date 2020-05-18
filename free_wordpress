@@ -123,7 +123,9 @@ function main() {
 	mv wp-config-sample.php wp-config.php
 	wpdbimport wp-content/database.sql
 	wp config set table_prefix design_
-	tempurlit
+	setting url
+	wp option set home $(tempurl)
+	wp option set siteurl $(tempurl)
 	fixwps
 	wp option get home
 	echo
