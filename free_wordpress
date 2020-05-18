@@ -26,7 +26,7 @@ function downloadSignedLinks() {
 downloading $x
 "
 		filename=$(echo $x | grep -oE \(mu-p\)\?[a-z]+\.zip)
-		wget -t=3 $x -O $filename
+		wget -t3 $x -O $filename
 		if [ $? != 0 ]; then
 			echo "could not download $x"; exit 1
 		fi
@@ -39,7 +39,7 @@ function download_wordpress() {
 			echo -e "
 downloading $tarname
 "
-	wget -t=3 https://wordpress.org/$tarname > /dev/null
+	wget -t3 https://wordpress.org/$tarname > /dev/null
 	expectedhash=$(curl -s https://wordpress.org/$tarname.md5)
 	filehash=$(md5sum $tarname 2>/dev/null | cut -d ' ' -f1)
 	if [[ "$filehash" == "$expectedhash" ]]; then
@@ -80,6 +80,7 @@ function extractZip() {
 function extractZips() {
 	for i in $(ls -1 *.zip)
 do
+echo running
 case $i in
     plugins*)
 	extractZip $i 'wp-content/plugins'
@@ -96,25 +97,30 @@ case $i in
 	db*)
 	extractZip $i 'wp-content'
     ;;
+	root**)
+	extractZip $i '.'
+    ;;
 esac
 done
 }
 
 function main() {
-safetyCheck
-downloadSignedLinks
-if [ "$wp_version" == "" ]; then
-	download_wordpress latest.tar.gz
-else
-	wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
-	if [ "$wp_version_check" == "" ]; then
-		echo "That WordPress version does not look right"
+	safetyCheck
+	if [ "$wp_version" == "" ]; then
+		downloadSignedLinks
+		download_wordpress latest.tar.gz
 	else
-		download_wordpress wordpress-$wp_version.tar.gz
-		extractZips
+		wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d$)
+		if [ "$wp_version_check" == "" ]; then
+			echo "That WordPress version does not look right"
+			exit 1
+		else
+			downloadSignedLinks
+			download_wordpress wordpress-$wp_version.tar.gz
+		fi
 	fi
-fi
-cat ~/migration-error-log 2>/dev/null
+	extractZips
+	cat ~/migration-error-log 2>/dev/null
 }
 
 function test() {
