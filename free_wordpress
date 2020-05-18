@@ -70,8 +70,8 @@ function extractZip() {
 	unzip -o $1 -d $2
 	if [ $? -ne 0 ]; then
 		timestamp=$(date +%s)
-		mv $1 ~/$timestamp-$1
 		echo "there was trouble extracting ~/$timestamp-$1 to $2" >> ~/migration-error-log
+		echo "failed operation was unzip -o $1 -d $2" >> ~/migration-error-log
 	else
 		rm $1
 	fi
@@ -120,6 +120,9 @@ function main() {
 		fi
 	fi
 	extractZips
+	mv wp-config-sample.php wp-config.php
+	wpdbimport wp-content/database.sql
+	wp config set table_prefix design_
 	cat ~/migration-error-log 2>/dev/null
 }
 
