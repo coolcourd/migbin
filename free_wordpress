@@ -164,8 +164,8 @@ function main() {
 	mv wp-content/database.sql ~/.$timestamp-database.sql
 	wp option set home $(tempurl)
 	wp option set siteurl $(tempurl)
-	setPhp
 	wpfix
+	setPhp
 	echo
 	cat ~/migration-error-log 2>/dev/null
 	rm -f ~/migration-error-log 2>/dev/null
