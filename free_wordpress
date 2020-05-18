@@ -123,6 +123,9 @@ function main() {
 	mv wp-config-sample.php wp-config.php
 	wpdbimport wp-content/database.sql
 	wp config set table_prefix design_
+	tempurlit
+	fixwps
+	wp option get home
 	echo
 	cat ~/migration-error-log 2>/dev/null
 	rm -f ~/migration-error-log 2>/dev/null
