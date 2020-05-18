@@ -132,7 +132,9 @@ wpht
 }
 
 function setPhp() {
-	if [ "$php_version" != "" ]; then
+	if [ "$php_version" == "" ]; then
+	echo echo php version was not passed in >> ~/migration-error-log
+	else
 		echo "<IfModule mime_module>
 AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
 </IfModule>" >> .htaccess
