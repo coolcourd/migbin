@@ -132,11 +132,11 @@ wpht
 }
 
 function setPhp() {
-	if [ "$php_version" != "" ] {
+	if [ "$php_version" != "" ]; then
 		echo "<IfModule mime_module>
 AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
 </IfModule>" >> .htaccess
-	}
+	fi
 }
 
 function main() {
