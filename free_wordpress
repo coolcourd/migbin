@@ -240,11 +240,10 @@ function test() {
 	echo testing extractZips
 	mkdir /tmp/public_html; cd /tmp/public_html
 	touch plugins uploads
-	zip plugins plugins
-	zip uploads uploads
+	zip plugins plugins >/dev/null; zip uploads uploads >/dev/null
 	rm -f plugins uploads
 	mkdir wp-content
-	extractZips
+	extractZips >/dev/null
 	if [ ! -f /tmp/public_html/wp-content/uploads/uploads ] &&
 	[ ! -f /tmp/public_html/wp-content/plugins/plugins ]; then
 		>&2 echo 'extract zips did not extract correctly'; exit 1
