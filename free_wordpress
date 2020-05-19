@@ -104,16 +104,6 @@ esac
 done
 }
 
-function setPrefix() {
-	options_table=$(grep -ioPm 1 'create table `.+options`' $1 | cut -d '`' -f2)
-	if [ $? -ne 0 ]; then
-		echo "could not detect table prefix take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
-		return 1
-	fi
-	prefix="${options_table::${#options_table}-7}"
-	wp config set table_prefix $prefix
-}
-
 function wpfix() {
 	find -type d -exec chmod 755 {} \; &
 	find -type f -exec chmod 644 {} \; &
@@ -134,7 +124,7 @@ wpht
 
 function setPhp() {
 	if [ "$php_version" == "" ]; then
-	echo php version was not passed in >> ~/migration-error-log
+	echo php version was not passed in, left as default. >> ~/migration-error-log
 	else
 		echo "<IfModule mime_module>
 AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
@@ -145,9 +135,15 @@ AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
 function wpdbi() {
 	cpuser="$(stat -c %U .)"
 	pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
-	prefix="$(wp config get table_prefix)"
 	dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
 	name="${cpuser:0:8}_${dbstuff}"
+	options_table=$(grep -ioPm 1 'create table `.+options`' $1 | cut -d '`' -f2)
+	if [ $? -ne 0 ]; then
+		echo "could not detect table prefix, used "wp_". Take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
+		prefix="wp_"
+	else
+		prefix="${options_table::${#options_table}-7}"
+	fi
 	uapi Mysql create_database name=$name 1>/dev/null
 	uapi Mysql create_user name=$name password=$pass 1>/dev/null
 	uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
@@ -168,6 +164,7 @@ function main() {
 	if [ "$wp_version" == "" ]; then
 		downloadSignedLinks
 		download_wordpress latest.tar.gz
+		echo wordpress version was not passed in, used latest >> ~/migration-error-log
 	else
 		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$)
 		if [ "$wp_version_check" == "" ]; then
