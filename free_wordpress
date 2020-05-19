@@ -236,6 +236,24 @@ function test() {
 		>&2 echo 'Safety check allowed install in a directory containing an index file'; exit 1
 	fi
 
+	echo testing extractZips
+	mkdir /tmp/public_html; cd /tmp/public_html
+	touch plugins uploads
+	zip plugins plugins
+	zip uploads uploads
+	rm -f plugins uploads
+	mkdir wp-content
+	extractZips
+	echo
+
+	if [ ! -f /tmp/public_html/wp-content/uploads/uploads ] &&
+	[ ! -f /tmp/public_html/wp-content/plugins/plugins ]; then
+		>&2 echo 'extract zips did not extract correctly'; exit 1
+	fi
+	cd /tmp
+	rm -rf /tmp/public_html
+
+
 
 	# close out tests
 	echo all tests passed
