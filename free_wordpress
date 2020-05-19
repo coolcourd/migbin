@@ -18,8 +18,7 @@ options:
 }
 
 function downloadSignedLinks() {
-	echo 'Paste in backup file urls 1 per line. Press ctrl d when done.'
-	links=$(cat)
+	if [ "$links" == "" ]; then echo "no links were provided."; exit 1; fi
 	for x in $links
 	do
 		echo -e "
@@ -268,6 +267,9 @@ case $i in
     -p=*|--php-version=*)
     php_version="${i#*=}"
     ;;
+	http*)
+	links="$links $i"
+	;;
 	-h|--help)
     help
     ;;
