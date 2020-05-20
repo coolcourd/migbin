@@ -21,9 +21,9 @@ prompts you for the cpanel password and then exports all databases placing them 
 run without args to export all dbs after cpanel password prompt
 
 ##### flags
-1. --prompt prompts you for a list of databases to export 
-2. -p lets you provide the cpanel password
-3. -h displays this help
+* --prompt prompts you for a list of databases to export 
+* -p lets you provide the cpanel password
+* -h displays this help
 #### findwpandimport
 Runs a find for wordpress sites in public_html and imports the matching sql file from ~/migration/dbs.
 
@@ -38,6 +38,20 @@ Runs from current directory and recursivly sets all directories to 755.
 Runs from current directory and recursivly sets all files to 644.
 #### fixwpbs
 Runs a set of common wordpress fixes in your current directory.
+#### free_wordpress
+Accepts a php version, WordPress version and list of urls to WordPress backup files and installs the site in the current directory.
+
+example usage:
+
+```$ free_wordpress --wp-version="5.3.3" --php-version="7.3" https://url.1 https://url.2 https://url.3 ...```
+
+urls are automatically detected in the command-line arguments.
+
+##### flags
+* -h --help : displays this message
+* -t --test : runs automated testing on the functions in this file.
+* -w --wordpress-version : sets the wordpress version of the install
+* -p --php-version : sets the php version of the install
 #### getmysites
 Builds an outline of all wordpress sites on the account and saves to ~/migration/migstuff/mysites.txt
 #### httpit
@@ -56,6 +70,8 @@ syncs etc and mail. can be used to sync an individual domain.
 example: 
 * mailsync # syncs all mail
 * mailsync example.com # syncs only mail for example.com
+#### mainurlit
+sets the tempurl back to the main url based on the .mainurl file located in the cwd
 #### phpver
 gives you a list of ea-php versions installed on the server and lets you pick one
 #### matchdbimport
@@ -85,6 +101,8 @@ example:
 Takes in a list of directories to make and cds you to the last one. This uses mkdir -p.
 #### premig
 Moves wordpress files and directories out of the current directory and into ~/premig$(date)
+#### setmainurls
+looks for .mainurl files and sets the WordPress home and siteurl options to it's contents
 #### setupssh
 This is a core function to how many others run. This function prompts you to give it a login string for a source server and will prompt you for the password. It will setup an ssh key and copy it to the source server so you can easily communicate with the source server with commands like mailsync, migrun and migsync.
 #### showphp
@@ -118,6 +136,6 @@ Lets you read and/or set the home and/or siteurl option for the wordpress site i
 
 Run without flags to only read the values.
 ##### flags
-1. -n Sets both to provided argument.
-2. -h Sets home to provided argument.
-3. -s Sets siteurl to provided argument.
+* -n Sets both to provided argument.
+* -h Sets home to provided argument.
+* -s Sets siteurl to provided argument.
