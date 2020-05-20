@@ -8,6 +8,11 @@ function setMainUrls() {
 	else
 		cd $(dirname $x)
 		wp option set home $mainurl
+		if [ $? == 0 ]; then
+			rm -f $x
+		else
+			echo something went wrong setting the url in $x
+		fi
 		wp option set siteurl $mainurl
 		wpht
 		wp option get siteurl

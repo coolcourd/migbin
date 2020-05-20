@@ -1,2 +1,3 @@
 #!/bin/bash
+wp option get home > .mainurl
 wpurl -n $(tempurl)
