@@ -24,7 +24,10 @@ function downloadSignedLinks() {
 		echo -e "
 downloading $x
 "
-		filename=$(echo $x | grep -oP \(mu-p\)\?[a-z]+\.zip)
+		filename=$(echo $x | grep -oP \(mu-p\)\?[a-z]+\.zip 2>/dev/null)
+		if [ $? != 0 ]; then
+			filename=$(echo $x | grep -oE \(mu-p\)\?[a-z]+\.zip 2>/dev/null)
+		fi
 		wget -t3 $x -O $filename
 		if [ $? != 0 ]; then
 			echo "could not download $x"; exit 1
@@ -123,7 +126,9 @@ wpht 2>/dev/null
 
 function setPhp() {
 	if [ "$php_version" == "" ]; then
-	echo php version was not passed in, left as default. >> ~/migration-error-log
+		echo php version was not passed in, left as default. >> ~/migration-error-log
+	elif [[ ! $(echo ${php_version//./} | grep -o ^[0-9][0-9]$) ]]; then
+		echo php version did not look right, left as default. >> ~/migration-error-log
 	else
 		echo "<IfModule mime_module>
 AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
@@ -165,7 +170,10 @@ function main() {
 		download_wordpress latest.tar.gz
 		echo wordpress version was not passed in, used latest >> ~/migration-error-log
 	else
-		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$)
+		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
+		if [ $? != 0 ]; then
+			wp_version_check=$(echo $x | grep -oE ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
+		fi
 		if [ "$wp_version_check" == "" ]; then
 			echo "That WordPress version does not look right '$wp_version'"
 			exit 1
@@ -251,9 +259,81 @@ function test() {
 	cd /tmp
 	rm -rf /tmp/public_html
 
+	#test download_wordpress
+	echo testing download_wordpress
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	failedresponse=$(download_wordpress dfgdsfg | grep 'hash did not match')
+	if [ "$failedresponse" == "" ]; then
+		>&2 echo 'download_wordpress did not detect a bad hash'; exit 1
+	else
+		echo passed download_wordpress test 1
+	fi
+	download_wordpress latest.tar.gz >/dev/null
+	if [ $(ls l*) ]; then
+		echo passed download_wordpress test 2
+	else
+		>&2 echo 'download_wordpress did not download the latest version of WordPress'; exit 1
+	fi
+	cd /tmp/
+	rm -rf /tmp/public_html
 
+	#test downloadSignedLinks
+	echo testing downloadSignedLinks
+		mkdir /tmp/public_html
+	cd /tmp/public_html
+	# it should fail if there are no links
+	if [[ $(downloadSignedLinks | grep 'no links') ]]; then
+		echo passed downloadSignedLinks test 1
+	else
+		>&2 echo 'downloadSignedLinks ran without links'; exit 1
+	fi
+
+	# it should download hello dolly
+	links='https://github.com/wp-plugins/hello-dolly/archive/master.zip'
+	if [[ $(downloadSignedLinks | grep 'could not download') ]]; then
+		>&2 echo 'downloadSignedLinks could not download hello dolly'; exit 1
+	else
+		echo passed downloadSignedLinks test 2
+	fi
+
+	# it should fail to downlaod a 404
+	links='https://github.com/wp-plugins/hello-dolly/archive/not-found.zip'
+	if [[ $(downloadSignedLinks | grep 'could not download') ]]; then
+		echo passed downloadSignedLinks test 3
+	else
+		>&2 echo 'downloadSignedLinks did not error out when downloading a 404'; exit 1
+	fi
+
+	#test setPhp
+	# it should set the php verision in the .htaccess
+	echo testing setPhp
+	php_version="70"
+	setPhp
+	if [[ $(grep ea-php70 .htaccess) ]]; then
+		echo passed setPhp test 1
+	else
+		>&2 echo 'the .htaccess file does specify php70'; exit 1
+	fi
+	# it should not overwrite an existing .htaccess
+	php_version="7.1"
+	setPhp
+	if [[ $(grep ea-php70 .htaccess) ]]; then
+		echo passed setPhp test 2
+	else
+		>&2 echo 'the original .htaccess file was overwritten'; exit 1
+	fi
+	# it should set the php verision in the .htaccess
+	if [[ $(grep ea-php71 .htaccess) ]]; then
+		echo passed setPhp test 3
+	else
+		>&2 echo 'the .htaccess file does specify php71'; exit 1
+	fi
+	cd /tmp/
+	rm -rf /tmp/public_html
 
 	# close out tests
+	rm -f ~/migration-error-log
 	echo all tests passed
 	exit 0
 }
