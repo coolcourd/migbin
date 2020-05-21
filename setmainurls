@@ -1,0 +1,22 @@
+#!/bin/bash
+function setMainUrls() {
+	find ~/public_html -type f -name .mainurl | while read x
+	do
+	mainurl=$(cat $x)
+	if [ "$mainurl" == "" ]; then
+		echo the .mainurl file is empty. Please set the url manually
+	else
+		cd $(dirname $x)
+		wp option set home $mainurl
+		if [ $? == 0 ]; then
+			rm -f $x
+		else
+			echo something went wrong setting the url in $x
+		fi
+		wp option set siteurl $mainurl
+		wpht
+		wp option get siteurl
+	fi
+	done
+}
+setMainUrls
