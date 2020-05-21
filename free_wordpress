@@ -1,0 +1,362 @@
+#!/bin/bash
+
+function help() {
+	echo -e '
+
+Accepts a php version, WordPress version and list of urls to WordPress backup files and installs the site in the current directory.
+
+example usage:
+$ free_wordpress --wp-version="5.3.3" --php-version="7.3" https://url.1 https://url.2 https://url.3 ...
+
+options:
+-h --help : displays this message
+-t --test : runs automated testing on the functions in this file.
+-w --wordpress-version : sets the wordpress version of the install
+-p --php-version : sets the php version of the install
+'
+	exit 0
+}
+
+function downloadSignedLinks() {
+	if [ "$links" == "" ]; then echo "no links were provided."; exit 1; fi
+	for x in $links
+	do
+		echo -e "
+downloading $x
+"
+		filename=$(echo $x | grep -oP \(mu-p\)\?[a-z]+\.zip 2>/dev/null)
+		if [ $? != 0 ]; then
+			filename=$(echo $x | grep -oE \(mu-p\)\?[a-z]+\.zip 2>/dev/null)
+		fi
+		wget -t3 $x -O $filename
+		if [ $? != 0 ]; then
+			echo "could not download $x"; exit 1
+		fi
+	done
+	echo 'All backup files have been successfully downloaded'
+}
+
+function download_wordpress() {
+	tarname=$1
+			echo -e "
+downloading $tarname
+"
+	wget -t3 https://wordpress.org/$tarname > /dev/null
+	expectedhash=$(curl -s https://wordpress.org/$tarname.md5)
+	filehash=$(md5sum $tarname 2>/dev/null | cut -d ' ' -f1)
+	if [[ "$filehash" == "$expectedhash" ]]; then
+		# tar -xf --strip-components 1 $tarname  # doesnt work on mac
+		tar -xf $tarname
+		mv wordpress/* .
+		rmdir wordpress
+		rm $tarname 2>/dev/null
+		return 0
+	else
+		echo "the hash did not match"
+		echo recieved $filehash
+		echo expected $expectedhash
+		rm $tarname 2>/dev/null
+		exit 1
+	fi
+}
+
+function safetyCheck() {
+    if [[ $(pwd) != *"public_html"* ]]; then
+		echo "Please run in public_html or deeper. Ideally an empty directory. You are in $(pwd)"; exit 1
+	fi
+	if [[ $(ls index.* 2>/dev/null) ]] || [[ $(ls wp-content 2>/dev/null) ]]; then
+        echo 'There is already a site here'; exit 1
+	fi
+}
+
+function extractZip() {
+	unzip -o $1 -d $2
+	if [ $? -ne 0 ]; then
+		echo "there was trouble extracting ~/$1 to $2" >> ~/migration-error-log
+		echo "failed operation was 'unzip -o $1 -d $2'" >> ~/migration-error-log
+	else
+		rm $1
+	fi
+}
+
+function extractZips() {
+	for i in $(ls -1 *.zip)
+do
+echo running
+case $i in
+    plugins*)
+	extractZip $i 'wp-content/plugins'
+    ;;
+    mu-plugins*)
+	extractZip $i 'wp-content/mu-plugins'
+    ;;
+	uploads*)
+	extractZip $i 'wp-content/uploads'
+    ;;
+	themes*)
+	extractZip $i 'wp-content/themes'
+    ;;
+	db*)
+	extractZip $i 'wp-content'
+    ;;
+	root**)
+	extractZip $i '.'
+    ;;
+esac
+done
+}
+
+function wpfix() {
+	find -type d -exec chmod 755 {} \; &
+	find -type f -exec chmod 644 {} \; &
+	rm -f *.ini wordfence-waf.php gd-config.php 2>/dev/null
+	echo 'output_buffering = On' >php.ini
+	echo '# BEGIN WordPress
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.php [L]
+</IfModule>
+# END WordPress' >.htaccess
+wpht 2>/dev/null
+}
+
+function setPhp() {
+	if [ "$php_version" == "" ]; then
+		echo php version was not passed in, left as default. >> ~/migration-error-log
+	elif [[ ! $(echo ${php_version//./} | grep -o ^[0-9][0-9]$) ]]; then
+		echo php version did not look right, left as default. >> ~/migration-error-log
+	else
+		echo "<IfModule mime_module>
+AddHandler application/x-httpd-ea-php${php_version//./} .php .php7 .phtml
+</IfModule>" >> .htaccess
+	fi
+}
+
+function wpdbi() {
+	cpuser="$(stat -c %U .)"
+	pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
+	dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
+	name="${cpuser:0:8}_${dbstuff}"
+	options_table=$(grep -ioPm 1 'create table `.+options`' wp-content/database.sql | cut -d '`' -f2)
+	if [ $? -ne 0 ]; then
+		echo "could not detect table prefix, used "wp_". Take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
+		prefix="wp_"
+	else
+		prefix="${options_table::${#options_table}-7}"
+	fi
+	uapi Mysql create_database name=$name 1>/dev/null
+	uapi Mysql create_user name=$name password=$pass 1>/dev/null
+	uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
+	echo "name ${name} password ${pass} user ${name}"
+	wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix
+	wp config set WP_DEBUG false --type=variable
+	mysql --user=$name -f --password=$pass $name <$1 2>/dev/null
+}
+
+function setTempUrl() {
+	wp option get home > .mainurl
+	wp option set home $(tempurl)
+	wp option set siteurl $(tempurl)
+}
+
+function main() {
+	safetyCheck
+	if [ "$wp_version" == "" ]; then
+		downloadSignedLinks
+		download_wordpress latest.tar.gz
+		echo wordpress version was not passed in, used latest >> ~/migration-error-log
+	else
+		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
+		if [ $? != 0 ]; then
+			wp_version_check=$(echo $x | grep -oE ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
+		fi
+		if [ "$wp_version_check" == "" ]; then
+			echo "That WordPress version does not look right '$wp_version'"
+			exit 1
+		else
+			downloadSignedLinks
+			download_wordpress wordpress-$wp_version.tar.gz
+		fi
+	fi
+	extractZips
+	rm -f wp-config-sample.php
+	wpdbi wp-content/database.sql
+	wp config set WP_AUTO_UPDATE_CORE false --raw --add --type=constant
+	timestamp=$(date +%s)
+	mv wp-content/database.sql ~/.$timestamp-database.sql
+	setTempUrl
+	wpfix
+	setPhp
+	echo -e '
+	migration complete'
+	wp option get home
+	cat ~/migration-error-log 2>/dev/null
+	rm -f ~/migration-error-log 2>/dev/null
+}
+
+function test() {
+	# setup test env
+	mkdir /tmp/public_html
+	echo testing > /tmp/public_html/free-wordpress
+	if [ $? -ne 0 ]; then
+		echo tests cannot be ran on this environment. No access to /tmp
+		exit 1
+	fi
+	rm -rf /tmp/public_html
+	cd /tmp/
+
+	# test that cannot install outside of public_html
+	echo testing safetyCheck
+	exited=$(safetyCheck)
+	if [[ $(echo $exited | grep Please) ]]; then
+		echo 'passed safetyCheck test 1'
+	else
+		>&2 echo "Safety check allowed install outsite of public_html"; exit 1
+	fi
+
+	# test that can install inside a clean public_html
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	exited=$(safetyCheck)
+	cd /tmp
+	rmdir /tmp/public_html
+	if [[ $(echo $exited | grep 'site here') ]]; then
+		>&2 echo 'Safety check did not allow install under good conditions'; exit 1
+	else
+		echo 'passed safetyCheck test 2'
+	fi
+
+	# test that cannot install when there is a site
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	touch index.php
+	exited=$(safetyCheck)
+	cd /tmp
+	rm -rf /tmp/public_html
+	if [[ $(echo $exited | grep 'site here') ]]; then
+		echo 'passed safetyCheck test 3'
+	else
+		>&2 echo 'Safety check allowed install in a directory containing an index file'; exit 1
+	fi
+
+	#test extracting zips
+	echo testing extractZips
+	mkdir /tmp/public_html; cd /tmp/public_html
+	touch plugins uploads
+	zip plugins plugins >/dev/null; zip uploads uploads >/dev/null
+	rm -f plugins uploads
+	mkdir wp-content
+	extractZips >/dev/null
+	if [ ! -f /tmp/public_html/wp-content/uploads/uploads ] &&
+	[ ! -f /tmp/public_html/wp-content/plugins/plugins ]; then
+		>&2 echo 'extract zips did not extract correctly'; exit 1
+	fi
+	echo passed extractZips test 1
+	cd /tmp
+	rm -rf /tmp/public_html
+
+	#test download_wordpress
+	echo testing download_wordpress
+	mkdir /tmp/public_html
+	cd /tmp/public_html
+	failedresponse=$(download_wordpress dfgdsfg | grep 'hash did not match')
+	if [ "$failedresponse" == "" ]; then
+		>&2 echo 'download_wordpress did not detect a bad hash'; exit 1
+	else
+		echo passed download_wordpress test 1
+	fi
+	download_wordpress latest.tar.gz >/dev/null
+	if [ $(ls l*) ]; then
+		echo passed download_wordpress test 2
+	else
+		>&2 echo 'download_wordpress did not download the latest version of WordPress'; exit 1
+	fi
+	cd /tmp/
+	rm -rf /tmp/public_html
+
+	#test downloadSignedLinks
+	echo testing downloadSignedLinks
+		mkdir /tmp/public_html
+	cd /tmp/public_html
+	# it should fail if there are no links
+	if [[ $(downloadSignedLinks | grep 'no links') ]]; then
+		echo passed downloadSignedLinks test 1
+	else
+		>&2 echo 'downloadSignedLinks ran without links'; exit 1
+	fi
+
+	# it should download hello dolly
+	links='https://github.com/wp-plugins/hello-dolly/archive/master.zip'
+	if [[ $(downloadSignedLinks | grep 'could not download') ]]; then
+		>&2 echo 'downloadSignedLinks could not download hello dolly'; exit 1
+	else
+		echo passed downloadSignedLinks test 2
+	fi
+
+	# it should fail to downlaod a 404
+	links='https://github.com/wp-plugins/hello-dolly/archive/not-found.zip'
+	if [[ $(downloadSignedLinks | grep 'could not download') ]]; then
+		echo passed downloadSignedLinks test 3
+	else
+		>&2 echo 'downloadSignedLinks did not error out when downloading a 404'; exit 1
+	fi
+
+	#test setPhp
+	# it should set the php verision in the .htaccess
+	echo testing setPhp
+	php_version="70"
+	setPhp
+	if [[ $(grep ea-php70 .htaccess) ]]; then
+		echo passed setPhp test 1
+	else
+		>&2 echo 'the .htaccess file does specify php70'; exit 1
+	fi
+	# it should not overwrite an existing .htaccess
+	php_version="7.1"
+	setPhp
+	if [[ $(grep ea-php70 .htaccess) ]]; then
+		echo passed setPhp test 2
+	else
+		>&2 echo 'the original .htaccess file was overwritten'; exit 1
+	fi
+	# it should set the php verision in the .htaccess
+	if [[ $(grep ea-php71 .htaccess) ]]; then
+		echo passed setPhp test 3
+	else
+		>&2 echo 'the .htaccess file does specify php71'; exit 1
+	fi
+	cd /tmp/
+	rm -rf /tmp/public_html
+
+	# close out tests
+	rm -f ~/migration-error-log
+	echo all tests passed
+	exit 0
+}
+
+for i in "$@"
+do
+case $i in
+    -w=*|--wp-version=*)
+    wp_version="${i#*=}"
+    ;;
+    -p=*|--php-version=*)
+    php_version="${i#*=}"
+    ;;
+	http*)
+	links="$links $i"
+	;;
+	-h|--help)
+    help
+    ;;
+	-t|--test)
+    test
+    ;;
+esac
+done
+
+main
