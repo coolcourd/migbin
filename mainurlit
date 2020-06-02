@@ -7,8 +7,8 @@ if [ -f .mainurl ]; then
         wp option set home $mainurl
         if [ $? == 0 ]; then
         wp option set siteurl $mainurl
-        wp option get siteurl
         wpht
+        echo the new url is $(wp option get siteurl)
         rm .mainurl
         else
         echo there was a problem
