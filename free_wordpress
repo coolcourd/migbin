@@ -170,7 +170,7 @@ function main() {
 		download_wordpress latest.tar.gz
 		echo wordpress version was not passed in, used latest >> ~/migration-error-log
 	else
-		wp_version_check=$(echo $wp_version | grep -oP ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
+		wp_version_check=$(echo $wp_version | grep -oE ^[456]\.\\d?\.?\\\d\\d?$ 2>/dev/null)
 		if [ $? != 0 ]; then
 			wp_version_check=$(echo $x | grep -oE ^[456]\.\\d?\.?\\\d$ 2>/dev/null)
 		fi
