@@ -141,12 +141,12 @@ function wpdbi() {
 	pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
 	dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
 	name="${cpuser:0:8}_${dbstuff}"
-	options_table=$(grep -ioPm 1 'create table `.+options`' wp-content/database.sql | cut -d '`' -f2)
+	options_table=$(grep -ioPm 1 'create table `.+terms`' wp-content/database.sql | cut -d '`' -f2)
 	if [ $? -ne 0 ]; then
 		echo "could not detect table prefix, used "wp_". Take a look at the db tables and set in wp-config.php" >> ~/migration-error-log
 		prefix="wp_"
 	else
-		prefix="${options_table::${#options_table}-7}"
+		prefix="${options_table::${#options_table}-5}"
 	fi
 	uapi Mysql create_database name=$name 1>/dev/null
 	uapi Mysql create_user name=$name password=$pass 1>/dev/null
