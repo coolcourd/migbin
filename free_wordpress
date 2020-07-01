@@ -122,6 +122,7 @@ RewriteRule . /index.php [L]
 </IfModule>
 # END WordPress' >.htaccess
 wpht 2>/dev/null
+wp plugin deactivate really-simple-ssl 2>/dev/null
 }
 
 function setPhp() {
