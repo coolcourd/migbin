@@ -13,6 +13,7 @@ options:
 -t --test : runs automated testing on the functions in this file.
 -w --wordpress-version : sets the wordpress version of the install
 -p --php-version : sets the php version of the install
+-m --migid : used for creating a migrationid.txt file
 '
 	exit 0
 }
@@ -192,6 +193,11 @@ function main() {
 	setTempUrl
 	wpfix
 	setPhp
+	if [ "$migid" == ""]; then
+		echo "no migid passed in. txt file not created" >> ~/migration-error-log
+	else
+		echo "This file was created as part of the site migration process." > $migid.txt
+	fi
 	echo -e '
 	migration complete'
 	wp option get home
@@ -347,6 +353,9 @@ case $i in
     ;;
     -p=*|--php-version=*)
     php_version="${i#*=}"
+    ;;
+	-m=*|--migid=*)
+    migid="${i#*=}"
     ;;
 	http*)
 	links="$links $i"
