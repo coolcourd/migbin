@@ -1,0 +1,18 @@
+#!/bin/bash
+    echo "replacing $1 with $2"
+    echo -n "Are you sure you want to continue?[y/yes] "
+    read acknowledge
+    if [[ $acknowledge == 'yes' ]] || [[ $acknowledge == 'y' ]]; then
+    grep -irl $1 | while read x; do sed -i "s,$1,$2,g" "$x"; done
+    echo
+    echo "######################"
+    echo
+    echo "       *RecursiV*"
+    echo "        Old: $1"
+    echo "        New: $2"
+    echo
+    echo "######################"
+    echo
+    else
+    echo "Exited."
+    fi
