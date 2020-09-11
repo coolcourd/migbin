@@ -1,4 +1,5 @@
 #!/bin/bash
+cur_dir=$(pwd)
 if [[ $cur_dir == *"public_html"* ]]; then
     if [ -z "$1" ]; then
         echo "no url provided"
