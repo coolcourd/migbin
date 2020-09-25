@@ -11,12 +11,13 @@ function wpdbimport() {
      echo "name ${name} password ${pass} user ${name}"
      if [ -f wp-config.php ]; then
           mv wp-config.php .old-wp-config.php
-          wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix
+          host="$(uapi Mysql locate_server remote_host 2>/dev/null | while read x; do echo $x | grep remote_host | cut -f1 | sed 's@remote_host: @@'; done;)"
+          wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix --dbhost=$host --force
           wp config set WP_DEBUG false --type=variable
-          mysql --user=$name -f --password=$pass $name <$1
+          mysql --user=$name -f --password=$pass -h $host $name <$1
      fi
      if [ "$#" -eq 1 ]; then
-          mysql --user=$name -f --password=$pass $name <$1
+          mysql --user=$name -f --password=$pass -h $host $name <$1
      fi
 }
 wpdbimport $1

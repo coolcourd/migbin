@@ -7,14 +7,14 @@ if [ -e wp-config.php ]; then
   DB_PASSWORD=${wpconn[2]}
   DB_HOST=${wpconn[3]}
   if [[ $1 == '-n' ]]; then #updates both urls to provided value
-    mysql -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'siteurl' OR option_name = 'home';"
+    mysql -u ${DB_USER} -p${DB_PASSWORD} -h ${DB_HOST} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'siteurl' OR option_name = 'home';"
   elif [[ $1 == '-h' ]]; then #updated home url to provided value
-    mysql -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'home';"
+    mysql -u ${DB_USER} -p${DB_PASSWORD} -h ${DB_HOST} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'home';"
   elif [[ $1 == '-s' ]]; then #updates site url to provided value
-    mysql -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'siteurl';"
+    mysql -u ${DB_USER} -p${DB_PASSWORD} -h ${DB_HOST} -D ${DB_NAME} -e "UPDATE ${PREFIX}options SET option_value = '$2' WHERE option_name = 'siteurl';"
   fi
-  SITE_URL=$(mysql -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -se "SELECT option_value FROM ${PREFIX}options WHERE option_name = 'siteurl';" | cut -f2)
-  HOME_URL=$(mysql -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -se "SELECT option_value FROM ${PREFIX}options WHERE option_name = 'home';" | cut -f2)
+  SITE_URL=$(mysql -u ${DB_USER} -p${DB_PASSWORD} -h ${DB_HOST}  -D ${DB_NAME} -se "SELECT option_value FROM ${PREFIX}options WHERE option_name = 'siteurl';" | cut -f2)
+  HOME_URL=$(mysql -u ${DB_USER} -p${DB_PASSWORD} -h ${DB_HOST}  -D ${DB_NAME} -se "SELECT option_value FROM ${PREFIX}options WHERE option_name = 'home';" | cut -f2)
   echo -e "${BLUESH}Database${SETSH}: ${DB_NAME}"
   echo -e "${GREEN}Home URL${SET}: $HOME_URL"
   echo -e "${GREEN}Site URL${SET}: ${SITE_URL}"

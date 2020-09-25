@@ -153,10 +153,11 @@ function wpdbi() {
 	uapi Mysql create_database name=$name 1>/dev/null
 	uapi Mysql create_user name=$name password=$pass 1>/dev/null
 	uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
+	host="$(uapi Mysql locate_server remote_host 2>/dev/null | while read x; do echo $x | grep remote_host | cut -f1 | sed 's@remote_host: @@'; done;)"
 	echo "name ${name} password ${pass} user ${name}"
-	wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix
+	wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix --dbhost=$host --force
 	wp config set WP_DEBUG false --type=variable
-	mysql --user=$name -f --password=$pass $name <$1 2>/dev/null
+	mysql --user=$name -f --password=$pass --host=$host $name <$1 2>/dev/null
 }
 
 function setTempUrl() {
