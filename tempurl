@@ -1,7 +1,7 @@
 #!/bin/bash
 function tempurl() {
-    host="$(uapi Mysql locate_server remote_host 2>/dev/null | while read x; do echo $x | grep remote_host | cut -f1 | sed 's@remote_host: @@'; done;)"
-    if [ "$host" != "localhost" ]; then
+    mysql_host="$(uapi Mysql locate_server remote_host 2>/dev/null | grep -oP '(?<=host: ).+')"
+    if [ "$mysql_host" != "localhost" ]; then
     main_domain=$(uapi DomainInfo list_domains 2>/dev/null | awk '$1 ~ "main_domain:" {print $2}')
     webpath=$(pwd | grep -oP '(?<=public_html/).*')
     tempurl="http://$main_domain/$webpath"
