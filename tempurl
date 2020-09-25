@@ -1,5 +1,14 @@
 #!/bin/bash
 function tempurl() {
+    mysql_host="$(uapi Mysql locate_server remote_host 2>/dev/null | grep -oP '(?<=host: ).+')"
+    if [ "$mysql_host" != "localhost" ]; then
+    main_domain=$(uapi DomainInfo list_domains 2>/dev/null | awk '$1 ~ "main_domain:" {print $2}')
+    webpath=$(pwd | grep -oP '(?<=public_html/).*')
+    tempurl="http://$main_domain/$webpath"
+    echo $tempurl
+    exit 0
+    fi
+
     user=$(whoami) || user=$1
     if [[ ! -f /var/cpanel/users/$user ]]; then
         echo No access to user "'$user'"!
