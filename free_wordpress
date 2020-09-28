@@ -123,7 +123,7 @@ RewriteRule . /index.php [L]
 </IfModule>
 # END WordPress' >.htaccess
 wpht 2>/dev/null
-wp plugin deactivate really-simple-ssl 2>/dev/null
+wp --skip-plugins --skip-themes plugin deactivate really-simple-ssl 2>/dev/null
 }
 
 function setPhp() {
@@ -155,15 +155,15 @@ function wpdbi() {
 	uapi Mysql set_privileges_on_database user=$name database=$name privileges=ALL%20PRIVILEGES 1>/dev/null
 	mysql_host="$(uapi Mysql locate_server remote_host 2>/dev/null | grep -oP '(?<=host: ).+')"
 	echo "name ${name} password ${pass} user ${name}"
-	wp config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix --dbhost=$mysql_host --force
-	wp config set WP_DEBUG false --type=variable
+	wp --skip-plugins --skip-themes config create --dbname=$name --dbuser=$name --dbpass=$pass --dbprefix=$prefix --dbhost=$mysql_host --force
+	wp --skip-plugins --skip-themes config set WP_DEBUG false --type=variable
 	mysql --user=$name -f --password=$pass --host=$mysql_host $name <$1 2>/dev/null
 }
 
 function setTempUrl() {
-	wp option get home > .mainurl
-	wp option set home $(tempurl)
-	wp option set siteurl $(tempurl)
+	wp --skip-plugins --skip-themes option get home > .mainurl
+	wp --skip-plugins --skip-themes option set home $(tempurl)
+	wp --skip-plugins --skip-themes option set siteurl $(tempurl)
 }
 
 function main() {
@@ -188,7 +188,7 @@ function main() {
 	extractZips
 	rm -f wp-config-sample.php
 	wpdbi wp-content/database.sql
-	wp config set WP_AUTO_UPDATE_CORE false --raw --add --type=constant
+	wp --skip-plugins --skip-themes config set WP_AUTO_UPDATE_CORE false --raw --add --type=constant
 	timestamp=$(date +%s)
 	mv wp-content/database.sql ~/.$timestamp-database.sql
 	setTempUrl
@@ -201,7 +201,7 @@ function main() {
 	fi
 	echo -e '
 	migration complete'
-	wp option get home
+	wp --skip-plugins --skip-themes option get home
 	cat ~/migration-error-log 2>/dev/null
 	rm -f ~/migration-error-log 2>/dev/null
 }
