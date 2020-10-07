@@ -1,0 +1,23 @@
+#!/bin/bash
+
+GREEN='\033[0;32m'
+NC='\033[0m' #No Color
+
+if [[ -z "$1" ]]; then
+    find ~ -type f -name wp-config.php | sed -e 's/wp-config.php//g' | while read line; do
+        cd $line
+        wpurl
+        echo -e "${GREEN}Filepath: "$line ${NC}
+        echo "-----------------------"
+    done
+#Specify additional domain to search for only a specific Wordpress site
+elif [[ -n "$1" ]]; then
+    find ~ -type f -name wp-config.php | sed -e 's/wp-config.php//g' | while read line; do
+        cd $line
+        if [[ -n $(wpurl | grep -i "$1") ]]; then
+                wpurl | grep -i "$1"
+                echo -e "${GREEN}Filepath: "$line ${NC}
+        fi
+        echo "-----------------------"
+    done
+fi
