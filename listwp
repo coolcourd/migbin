@@ -10,6 +10,7 @@ if [[ -z "$1" ]]; then
         echo -e "${GREEN}Filepath: "$line ${NC}
         echo "-----------------------"
     done
+#Specify additional domain to search for only a specific Wordpress site
 elif [[ -n "$1" ]]; then
     find ~ -type f -name wp-config.php | sed -e 's/wp-config.php//g' | while read line; do
         cd $line
