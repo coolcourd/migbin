@@ -60,6 +60,12 @@ Sets WordPress site in current working directory to us http:// protocol for the 
 Sets WordPress site in current working directory to us https:// protocol for the home and siteurl options.
 #### importpsbu
 Imports a psbu db and all.
+#### listwp
+Search for all Wordpress websites and lists the URL and filepath for each. You can pass in a domain to search for specifically.
+
+Example:
+* listwp domain.com
+
 #### mailprep
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
 
