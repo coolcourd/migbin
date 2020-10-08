@@ -1,0 +1,9 @@
+nonce=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1);
+salt=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1);
+sha=$(echo -e "<?php \$nonce=\$argv[1];\$salt=\$argv[2];\$hash = base64_encode( hash( 'sha256', \$nonce . \$salt, false ) );\$hash = substr( \$hash, 0, 64 );echo \$hash . '\n';?>" | php -- $nonce $salt);
+prefix=`wp db prefix`;
+if [[ -d  "wp-content/mu-plugins"  ]]; then if [[ ! -f "wp-content/mu-plugins/sso.php" ]]; then cp ~/bin/migbin/sso.php ./wp-content/mu-plugins/; fi;fi
+wp db query "insert into ${prefix}options (option_id, option_name, option_value, autoload) values (NULL, '_transient_sso_token', '$sha', 'yes');";
+wp db query "insert into ${prefix}options (option_id, option_name, option_value, autoload) values (NULL, '_transient_timeout_sso_token', '$((`date +%s`+300))', 'yes');";
+homeurl=`wp option get home`;
+echo "$homeurl/wp-admin/admin-ajax.php?action=sso-check&nonce=$nonce&salt=$salt&user=";
