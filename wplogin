@@ -1,0 +1,20 @@
+#!/bin/bash
+
+wpinstall=`dirname $(wp --skip-plugins --skip-themes config path 2>/dev/null) 2>/dev/null`
+if [[ "$wpinstall" == "" || ! -d  "$wpinstall/wp-content" ]]; then
+	     echo Not a wordpress installation.
+	          exit
+fi
+if [[ ! -f "$wpinstall/wp-content/mu-plugins/sso.php" ]]; then
+	     mkdir $wpinstall/wp-content/mu-plugins 2>/dev/null
+	          cp ~/bin/migbin/sso.php $wpinstall/wp-content/mu-plugins/ 2>/dev/null
+
+fi
+nonce=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+salt=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+sha=$(echo -n $nonce$salt | sha256sum | base64)
+sha=${sha:0:64}
+wp --skip-plugins --skip-themes transient set sso_token $sha > /dev/null
+wp --skip-plugins --skip-themes transient set timeout_sso_token $((`date +%s`+300)) > /dev/null
+homeurl=`wp --skip-plugins --skip-themes option get home 2>/dev/null`
+echo "$homeurl/wp-admin/admin-ajax.php?action=sso-check&nonce=$nonce&salt=$salt&user="
