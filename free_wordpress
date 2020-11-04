@@ -197,7 +197,7 @@ function main() {
 	if [ "$migid" == "" ]; then
 		echo "no migid passed in. txt file not created" >> ~/migration-error-log
 	else
-		echo "This file was created as part of the site migration process." > $migid.txt
+		echo "This file may be deleted once the migration has completed." > $migid.txt
 	fi
 	echo -e '
 	migration complete'
