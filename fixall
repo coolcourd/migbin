@@ -1,3 +1,3 @@
 #!/bin/bash
-fixfiles
-fixdirs
+~/bin/migbin/fixfiles
+~/bin/migbin/fixdirs
