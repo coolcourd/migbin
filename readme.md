@@ -131,6 +131,8 @@ Imports an sql file, as the argument, and sets up a wp-config.php file for it if
 corrects rewrite rules in the .htaccess
 #### wpinfo
 Displays info about te wordpress site in the current dir.
+#### wpinstall
+Installs a fresh wordpress site.
 #### wplive
 configures a wordpress site from the backup directory to it's live directory
 example:
