@@ -1,0 +1,22 @@
+#!/bin/bash
+
+function wpinstall() {
+#check if the directory is (mostly) empty
+check_path_files=`find . -maxdepth 1 -type f | wc -l`
+check_path_dirs=`find . -maxdepth 1 -type d | wc -l`
+
+if [[ $check_path_files == 0 ]] && [[ $check_path_dirs == 1 ]]; then
+  wget -q https://wordpress.org/latest.tar.gz
+  tar -xf latest.tar.gz --strip-components=1 wordpress/
+  rm -f latest.tar.gz
+  cp wp-config-sample.php wp-config.php
+  wpdbimport
+  wp config shuffle-salts
+  echo -e "\e[32mWordpress installed. Go to the site now.\e[0m"
+else
+  echo -e "\e[31mThere is content in this directory, aborting.\e[0m"
+fi
+}
+
+wpinstall
+tempurl
