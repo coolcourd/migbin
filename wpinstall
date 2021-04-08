@@ -17,3 +17,6 @@ else
   echo -e "\e[31mThere is content in this directory, aborting.\e[0m"
 fi
 }
+
+wpinstall
+wpurl
