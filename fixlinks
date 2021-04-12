@@ -1,0 +1,62 @@
+#!/bin/bash
+function fixlinks() {
+  GREEN='\033[1;32m'
+  NC='\033[0m' #No Color
+  if test -f wp-config.php ; then 
+    if test -d .well-known ; then 
+        newdir=$(echo ".old_well-known-$(date +%s)")
+        mv .well-known ~/migration/migstuff/"$newdir" 2>/dev/null
+    fi
+    wp plugin deactivate jetpack --skip-themes --skip-plugins 2>/dev/null | grep -v Error | grep -v Warning 
+    site_url=$(~/bin/migbin/wpurl 2>/dev/null | tail -n +2 | head -n 1 | awk '{print $3}' | sed -E 's/(.*https:\/\/)|(.*http:\/\/)//g' | sed -E 's/(.*www\.)//g' )
+    home_url=$(~/bin/migbin/wpurl 2>/dev/null | tail -n 1 | awk '{print $3}' | sed -E 's/(.*https:\/\/)|(.*http:\/\/)//g' | sed -E 's/(.*www\.)//g' )
+    secure_site=$(echo 'https://'"$site_url" )
+    wwwsecure_site=$(echo 'https://www.'"$site_url" )
+    secure_home=$(echo 'https://'"$home_url" )
+    wwwsecure_home=$(echo 'https://www.'"$home_url" )
+    insecure_site=$(echo 'http://'"$site_url")
+    wwwinsecure_site=$(echo 'http://www.'"$site_url")
+    insecure_home=$(echo 'http://'"$home_url")
+    wwwinsecure_home=$(echo 'http://www.'"$home_url")
+    echo 'Replacing URLs...'
+    ~/bin/migbin/wp plugin deactivate really-simple-ssl really-simple-ssl-pro ssl-insecure-content-fixer 2>/dev/null | grep -v Error | grep -v Warning
+    ~/bin/migbin/wp search-replace "$secure_site" "$insecure_site" 2>/dev/null | tail -n 1 | grep -i success
+    ~/bin/migbin/wp search-replace "$wwwsecure_site" "$wwwinsecure_site" 2>/dev/null | tail -n 1 | grep -i success
+    ~/bin/migbin/wp search-replace "$secure_home" "$insecure_home" 2>/dev/null | tail -n 1 | grep -i success
+    ~/bin/migbin/wp search-replace "$wwwsecure_home" "$wwwinsecure_home" 2>/dev/null | tail -n 1 | grep -i success
+    echo 'Searching plugins...'
+    wp plugin deactivate jetpack wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize hummingbird-performance --skip-themes --skip-plugins 2>/dev/null | grep -iv Warning | grep -iv Error 
+    wp plugin deactivate w3-total-cache sucuri-scanner better-wp-security ithemes-security-pro ithemes-security --skip-themes --skip-plugins 2>/dev/null | grep -iv Warning | grep -iv Error
+    if test -f .user.ini; then 
+      rm -f .user.ini 2>/dev/null
+    fi
+    wp plugin list --skip-themes --skip-plugins | tail -n +2 | grep -v inactive | grep -v must-use | grep -v dropin | awk '{print $1}' | while read active_plugin ; do
+      if [[ "$active_plugin" == 'elementor' ]] ; then 
+        echo 'Fixing Elementor URLs'
+        ~/bin/migbin/wp elementor replace_urls "$secure_site" "$insecure_site" 2>/dev/null
+        ~/bin/migbin/wp elementor replace_urls "$wwwsecure_site" "$wwwinsecure_site" 2>/dev/null
+        ~/bin/migbin/wp elementor replace_urls "$secure_home" "$insecure_home" 2>/dev/null
+        ~/bin/migbin/wp elementor replace_urls "$wwwsecure_home" "$wwwinsecure_home" 2>/dev/null
+        ~/bin/migbin/wp elementor flush_css 2>/dev/null
+      fi 
+    done 
+    ~/bin/migbin/wp cache flush 2>/dev/null
+    if test -d wp-content/cache ; then 
+        newcache=$(echo "cache-$(date +%s)")
+        mkdir ~/migration/migstuff/ 2>/dev/null
+        mv wp-content/cache ~/migration/migstuff/"$newcache" 2>/dev/null
+    fi 
+    if test -d wp-content/et-cache ; then 
+        newetcache=$(echo "et-cache-$(date +%s)")
+        mv wp-content/cache wp-content/"$newetcache"
+    fi 
+    wpht 2>/dev/null
+    ~/bin/migbin/fixfiles
+    ~/bin/migbin/fixdirs
+    echo -e "SITE_URL = ${GREEN}$(wpurl 2>/dev/null | tail -n +2 | head -n 1 | awk '{print $3}' )" ${NC}
+    echo -e "HOME_URL = ${GREEN}$(wpurl 2>/dev/null | tail -n 1 | awk '{print $3}' )" ${NC}
+  else 
+    echo 'No wp-config.php file found'
+  fi
+}
+fixlinks

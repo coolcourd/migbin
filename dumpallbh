@@ -1,0 +1,25 @@
+#!/bin/bash
+function dumpallbh() {
+  if [[ $(whoami) == 'root' ]]; then 
+    echo 'Not a good idea to run as root'
+  else 
+    if test -d ~/migration_dbs/ ; then 
+      mv ~/migration_dbs/ ~/migration_dbs.old/ 
+      mkdir ~/migration_dbs/
+    else 
+      mkdir ~/migration_dbs/
+    fi 
+    mig_user=$(echo "$(whoami)_promig")
+    uapi Mysql create_user name="$mig_user" password='SuperHappy123@' 1>/dev/null
+    uapi Mysql list_databases | grep 'database:' | cut -d ':' -f 2 | sed 's/ //g' | while read x ; do 
+      uapi Mysql set_privileges_on_database user="$mig_user" database="$x" privileges=ALL%20PRIVILEGES 1>/dev/null
+      mysqldump "$x" -u "$mig_user" -p'SuperHappy123@' > ~/migration_dbs/"$x".sql 2>/dev/null
+      if test -f ~/migration_dbs/"$x".sql ; then 
+        echo "Dumped database $x successfully"
+      else 
+        echo "Did not dump database $x"
+      fi 
+    done
+  fi
+}
+dumpallbh
