@@ -72,6 +72,7 @@ Search for all Wordpress websites and lists the URL and filepath for each. You c
 
 Example:
 * listwp domain.com
+
 #### lftpline
 Prompts for lftp creds to autogenerate lftp line. Passwords w/ the characte '\' will need to be reviewed.
 #### mailprep
