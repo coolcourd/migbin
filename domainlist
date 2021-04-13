@@ -1,11 +1,12 @@
 #!/bin/bash
 function domainlist(){
+  echo ''
   uapi DomainInfo list_domains | grep main_domain
+  echo ''
   uapi DomainInfo list_domains | tail -n +7 | head -n -6 | grep -v main_domain | grep -v '\[\]' | grep -E -v ':' | sed -E 's/-//g' | sed -E 's/ //g' | grep -E '.' | while read x ; do
-  linenum=$(uapi DomainInfo domains_data | grep -ins "domain: $x" | cut -d ':' -f 1 | sed -E 's/ //g')
-  dir_line=$(uapi DomainInfo domains_data | head -n "$linenum" | tail -n 2 | head -n 1 | sed -E 's/documentroot: //g' )
-  echo "        - $x"
-  echo "    $dir_line"
-  done 
+  uapi DomainInfo single_domain_data domain="$x" | grep 'domain: '
+  uapi DomainInfo single_domain_data domain="$x" | grep 'documentroot: ' 
+  echo ''
+  done
 }
 domainlist
