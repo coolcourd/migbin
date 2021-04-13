@@ -18,5 +18,31 @@ else
 fi
 }
 
-wpinstall
+function main() {
+  server=$(hostname)
+  if [[ $server == cp.mwp* ]]; then
+    echo "Maybe don't run this on an MWP account"
+  else  
+    if test -f ./wp-includes/version.php ; then 
+      wpVersionNo=$(grep -s '$wp_version =' ./wp-includes/version.php | cut -d "'" -f 2 )
+      if [[ -n {$wpVersionNo} ]] ; then 
+        echo "WP version = $wpVersionNo"
+        echo "Downloading matching version..."
+        wget -q https://wordpress.org/wordpress-$wpVersionNo.tar.gz
+        tar -xf $wpVersionNo.tar.gz --strip-components=1
+        rm -f $wpVersionNo.tar.gz
+        wpdbimport
+        wp config shuffle-salts
+        echo -e "\e[32mWordpress installed. Go to the site now.\e[0m"
+      else 
+        echo 'Defaulting to latest version'
+        wpinstall
+      fi 
+    else
+      echo 'No Wordpress Includes folder found, attempting to install WordPress latest release'
+      wpinstall
+    fi
+  fi
+}
+main
 tempurl
