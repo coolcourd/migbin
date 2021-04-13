@@ -1,10 +1,8 @@
 #!/bin/bash
-
 function wpinstall() {
 #check if the directory is (mostly) empty
 check_path_files=`find . -maxdepth 1 -type f | wc -l`
 check_path_dirs=`find . -maxdepth 1 -type d | wc -l`
-
 if [[ $check_path_files == 0 ]] && [[ $check_path_dirs == 1 ]]; then
   wget -q https://wordpress.org/latest.tar.gz
   tar -xf latest.tar.gz --strip-components=1 wordpress/
@@ -17,7 +15,6 @@ else
   echo -e "\e[31mThere is content in this directory, aborting.\e[0m"
 fi
 }
-
 function main() {
   server=$(hostname)
   if [[ $server == cp.mwp* ]]; then
