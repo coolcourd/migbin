@@ -19,7 +19,7 @@ Makes a backup of the wordpress site called psbu.tar
 #### domainlist
 If run in BH brand accounts, prints off current directory list and their assigned document roots.
 #### dumpallbh
-Dumps all databases for BH accounts. Leaves behind a user: ******_promig which will need to be deleted manually. alternate to exportdbs
+Dumps all databases for BH accounts. Alternate to exportdbs if it fails.
 #### dumpdb 
 Alternative for dumping wp databases, doesn't use wpcli, works on older wp versions. 
 #### exportdbs
