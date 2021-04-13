@@ -20,6 +20,7 @@ function dumpallbh() {
         echo "Did not dump database $x"
       fi 
     done
+    uapi Mysql delete_user name="$mig_user"
   fi
 }
 dumpallbh
