@@ -1,0 +1,5 @@
+#!/bin/bash
+function wpjquery() {
+  ~/bin/migbin/wp plugin install enable-jquery-migrate-helper --skip-packages --activate
+}
+wpjquery

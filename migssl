@@ -1,0 +1,99 @@
+#!/bin/bash
+
+function cache_purge() {
+  mkdir ~/migration/migstuff/ 2>/dev/null
+  # Remove .user.ini, cache directories
+  if test -f .user.ini; then 
+    rm -f .user.ini 2>/dev/null
+  fi
+  if test -d ./.well-known ; then 
+      newwellknown=$(echo "well-known-$(date +%s)")
+      mv .well-known ~/migration/migstuff/"$newwellknown" 2>/dev/null
+  fi
+  if test -d ./wp-content/cache ; then 
+      newcache=$(echo "cache-$(date +%s)")
+      mv ./wp-content/cache ~/migration/migstuff/"$newcache" 2>/dev/null
+  fi 
+  if test -d ./wp-content/et-cache ; then 
+      newetcache=$(echo "et-cache-$(date +%s)")
+      mv ./wp-content/et-cache ~/migration/migstuff/"$newetcache"
+  fi
+  ~/bin/migbin/wp cache flush 2>/dev/null
+}
+
+function replace_terms() {
+  # Loop through array
+  for i in ${urlarray[@]}; do 
+    ~/bin/migbin/wp search-replace "$term_1" "$term_2" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
+  done 
+  # Check for elementor
+  ~/bin/migbin/wp plugin list --skip-packages | tail -n +2 | grep -v inactive | grep -v must-use | grep -v dropin | awk '{print $1}' | while read a_plugins ; do
+    if [[ "$a_plugins" == 'elementor' ]] ; then 
+      echo 'Fixing Elementor URLs'
+      for i in ${urlarray[@]}; do 
+        ~/bin/migbin/wp elementor replace_urls "$term_1" "$term_2" 2>/dev/null
+      done
+      ~/bin/migbin/wp elementor flush_css 2>/dev/null
+    fi 
+  done 
+}
+
+function disable_https() {
+  # Turn off plugins forcing ssl
+  ~/bin/migbin/wp plugin deactivate jetpack really-simple-ssl ssl-insecure-content-fixer --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
+  ~/bin/migbin/wp plugin deactivate wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize hummingbird-performance --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error 
+  ~/bin/migbin/wp plugin deactivate w3-total-cache sucuri-scanner better-wp-security ithemes-security-pro ithemes-security --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
+  term_1=$(echo "$sec$i")
+  term_2=$(echo "$insec$i")
+  replace_terms
+}
+
+function enable_https() {
+  term_1=$(echo "$insec$i")
+  term_2=$(echo "$sec$i")
+  replace_terms
+}
+
+function cleanup() {
+      cache_purge
+      ~/bin/migbin/wpht 2>/dev/null
+      ~/bin/migbin/fixfiles
+      ~/bin/migbin/fixdirs
+      ~/bin/migbin/wpurl 
+      unset urlarray
+}
+
+function migssl() {
+  GREEN='\033[1;32m'
+  NC='\033[0m' #No Color
+  # Test to see if we're in a wp directory.
+  if test -f wp-config.php ; then 
+    # Setup prefixes
+    sec=$(echo 'https://')
+    insec=$(echo 'http://')
+    # Get'site' urls
+    site=$(~/bin/migbin/wpurl 2>/dev/null | tail -n +2 | head -n 1 | awk '{print $3}' | sed -E 's/(.*https:\/\/)|(.*http:\/\/)//g' | sed -E 's/(.*www\.)//g' )
+    # Get 'home' urls
+    home=$(~/bin/migbin/wpurl 2>/dev/null | tail -n 1 | awk '{print $3}' | sed -E 's/(.*https:\/\/)|(.*http:\/\/)//g' | sed -E 's/(.*www\.)//g' )
+    # Store in array
+    if [[ "$site" == "$home" ]] ; then 
+      urlarray=("$site" "www.$site")
+    else 
+      urlarray=("$site" "www.$site" "$home" "www.$home")
+    fi
+    if [[ $1 == '-off' ]]; then 
+      echo 'Replacing URLs...'
+      disable_https
+      cleanup
+    elif [[ $1 == '-on' ]]; then
+      echo 'Replacing URLs...'
+      enable_https
+      cleanup
+    else 
+      echo "Use either 'migssl -off' or 'migssl -on' "
+    fi
+  else 
+    echo 'No wp-config.php file found'
+  fi 
+}
+migssl $1

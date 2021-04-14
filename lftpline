@@ -1,0 +1,12 @@
+#!/bin/bash
+function lftpline() {
+    read -p 'Host -> ' host
+    read -p 'Username -> ' username
+    read -p 'password -> ' password
+    if [[ $1 == '-go' ]]; then 
+      lftp -e 'set ftp:ssl-allow off;' -u "$username","$password" "$host"
+    else 
+      echo "lftp -e 'set ftp:ssl-allow off;' -u $username,'$password' $host"
+    fi 
+}
+lftpline $1

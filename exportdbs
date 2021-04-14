@@ -1,30 +1,25 @@
 #!/bin/bash
-function exportdbs() {
-    if [[ $1 == '-h' ]]; then
-        echo
-        echo run without args to export all dbs after cpanel password prompt
-        echo --prompt prompts you for a list of databases to export
-        echo -p lets you provide the cpanel password
-        echo -h displays this help
-    else
-        if [[ $1 == '--prompt' ]]; then
-            echo 'paste 1 db per line use ctrl d when done'
-            dbs=$(cat | sed '/^$/d')
-        else
-            dbs=$(mysql -u $(whoami) -p$2 -sN -e "show databases;" | grep -v information_schema)
-        fi
-        mkdir ~/migrationdbs 2>/dev/null
-        cpuser="$(stat -c %U .)"
-        pass="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1)"
-        dbstuff="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 7 | head -n 1)"
-        name="${cpuser}_${dbstuff}"
-        uapi Mysql create_user name=$name password=$pass 1>/dev/null
-        mysql_host="$(uapi Mysql locate_server remote_host 2>/dev/null | grep -oP '(?<=host: ).+')"
-        for x in $(echo $dbs); do
-            uapi Mysql set_privileges_on_database user=$name database=$x privileges=ALL%20PRIVILEGES 1>/dev/null
-            mysqldump -u $name -p$pass -h=$mysql_host $x >~/migrationdbs/$x.sql
-        done
-        uapi Mysql delete_user name=$name
-    fi
+function dumpallbh() {
+  if [[ $(whoami) == 'root' ]]; then 
+    echo 'Not a good idea to run as root'
+  else 
+    if test -d ~/migration_dbs/ ; then 
+      mv ~/migration_dbs/ ~/migration_dbs.old/ 
+      mkdir ~/migration_dbs/
+    else 
+      mkdir ~/migration_dbs/
+    fi 
+    mig_user=$(echo "$(whoami)_promig")
+    uapi Mysql create_user name="$mig_user" password='SuperHappy123@' 1>/dev/null
+    uapi Mysql list_databases | grep 'database:' | cut -d ':' -f 2 | sed 's/ //g' | while read x ; do 
+      uapi Mysql set_privileges_on_database user="$mig_user" database="$x" privileges=ALL%20PRIVILEGES 1>/dev/null
+      mysqldump "$x" -u "$mig_user" -p'SuperHappy123@' > ~/migration_dbs/"$x".sql 2>/dev/null
+      if test -f ~/migration_dbs/"$x".sql ; then 
+        echo "Dumped database $x successfully"
+      else 
+        echo "Did not dump database $x"
+      fi 
+    done
+  fi
 }
-exportdbs $1 $2
+dumpallbh

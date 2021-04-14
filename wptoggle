@@ -1,0 +1,8 @@
+#!/bin/bash
+function wptoggle() {
+  wp plugin deactivate jetpack wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize --skip-themes --skip-plugins | grep -iv Warning | grep -iv Error 
+  wp plugin list --skip-themes --skip-plugins | tail -n +2 | grep -v inactive | grep -v must-use | grep -v dropin | awk '{print $1}' | while read x ; do wp plugin toggle --skip-themes --skip-plugins "$x" 
+  wp plugin toggle --skip-themes --skip-plugins "$x" ; done 
+  wp cache flush --skip-themes --skip-plugins
+}
+wptoggle

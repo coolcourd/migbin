@@ -1,0 +1,12 @@
+#!/bin/bash
+function domainlist(){
+  echo ''
+  uapi DomainInfo list_domains | grep main_domain
+  echo ''
+  uapi DomainInfo list_domains | tail -n +7 | head -n -6 | grep -v main_domain | grep -v '\[\]' | grep -E -v ':' | sed -E 's/-//g' | sed -E 's/ //g' | grep -E '.' | while read x ; do
+  uapi DomainInfo single_domain_data domain="$x" | grep 'domain: '
+  uapi DomainInfo single_domain_data domain="$x" | grep 'documentroot: ' 
+  echo ''
+  done
+}
+domainlist
