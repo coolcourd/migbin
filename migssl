@@ -50,10 +50,6 @@ function disable_https() {
 }
 
 function enable_https() {
-  # Loop through array
-  for i in ${urlarray[@]}; do 
-    ~/bin/migbin/wp search-replace "$insec$i" "$sec$i" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
-  done 
   term_1=$(echo "$insec$i")
   term_2=$(echo "$sec$i")
   replace_terms
