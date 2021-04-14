@@ -18,13 +18,8 @@ source ~/bin/migbin/bashrc
 Makes a backup of the wordpress site called psbu.tar
 #### domainlist
 If run in BH brand accounts, prints off current directory list and their assigned document roots.
-<<<<<<< HEAD
-=======
-#### dumpallbh
-Dumps all databases for BH accounts. Alternate to exportdbs if it fails.
->>>>>>> 9281c0b1348fc71ac6d1fd37b4779547b9b9aed8
-#### dumpdb 
-Alternative for dumping wp databases, doesn't use wpcli, works on older wp versions. 
+#### dumpdb
+Alternative for dumping wp databases, doesn't use wpcli, works on older wp versions.
 #### exportdbs
 exports all databases placing them in ~/migration_dbs/dbs
 #### findwpandimport
@@ -70,7 +65,7 @@ Example:
 * listwp domain.com
 
 #### lftpline
-Prompts for lftp creds to autogenerate lftp line. 
+Prompts for lftp creds to autogenerate lftp line.
 
 ##### flags
 * -go --opens lftp connection instead of printing line
@@ -94,28 +89,28 @@ imports the matching sql file from ~/migration/dbs.
 Creates two directories, ~/migration/files and ~/migration/dbs. This is used to store migration backups on a server.
 #### miginstall
 installs migbin on the source in the home directory.
-#### migratewp 
+#### migratewp
 Takes the path to a wordpress site on the source and the path to install it to one the destination.
 #### migrun
 runs a command on the server setup with the setupssh command
 
-example: 
+example:
 * migrun ls migrationdbs
 #### migssh
 Logs in to the source server
-#### migssl 
-purges the cache and runs a search-replace for wordpress sites. 
+#### migssl
+purges the cache and runs a search-replace for wordpress sites.
 
 ##### flags
 * -on  --secures site, replaces http links with https
-* -off --disables https for the site, deactivates a few plugins which force ssl on wp sites. 
+* -off --disables https for the site, deactivates a few plugins which force ssl on wp sites.
 #### migsync
 rsyncs from the source server with first argument to the logged in server as the second argument.
-examples: 
+examples:
 * migsync public_html/ ~/migration/files
 * migsync etc/example.com ~/etc
 You can brace expand to grab multiple directoried from a source if you wrap the first argument in singlequotes.
-example: 
+example:
 * migsync '{etc,mail,public_html,migrationdbs}' ~/migration
 #### mkcd _bashrc function_
 Takes in a list of directories to make and cds you to the last one. This uses mkdir -p.
@@ -133,9 +128,9 @@ migsyncs migraiondbs to ~/migration/dbs
 Displays the bluehost temporaryurl for the current directory.
 #### tempurl
 Sets the wordpress home and siteurl settings to the bluehost temporaryurl for the current directory.
-#### updatemigbin 
+#### updatemigbin
 Uses git pull to update all scripts to the current version on github
-#### whodig 
+#### whodig
 displays dns settings for the domain you provide as the argument.
 #### wp
 This is wpcli use with --help to see help for every command
