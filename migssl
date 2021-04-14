@@ -21,7 +21,7 @@ function cache_purge() {
   ~/bin/migbin/wp cache flush 2>/dev/null
 }
 
-function replace_terms(){
+function replace_terms() {
   # Loop through array
   for i in ${urlarray[@]}; do 
     ~/bin/migbin/wp search-replace "$term_1" "$term_2" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
