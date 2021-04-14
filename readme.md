@@ -18,17 +18,10 @@ source ~/bin/migbin/bashrc
 Makes a backup of the wordpress site called psbu.tar
 #### domainlist
 If run in BH brand accounts, prints off current directory list and their assigned document roots.
-#### dumpallbh
-Dumps all databases for BH accounts. Leaves behind a user: ******_promig which will need to be deleted manually. 
 #### dumpdb 
 Alternative for dumping wp databases, doesn't use wpcli, works on older wp versions. 
 #### exportdbs
-prompts you for the cpanel password and then exports all databases placing them in ~/migration/dbs
-run without args to export all dbs after cpanel password prompt
-##### flags
-* --prompt prompts you for a list of databases to export 
-* -p lets you provide the cpanel password
-* -h displays this help
+exports all databases placing them in ~/migration_dbs/dbs
 #### findwpandimport
 Runs a find for wordpress sites in public_html and imports the matching sql file from ~/migration/dbs.
 
@@ -41,8 +34,6 @@ Runs a find in public_html and uses fixwps on all wordpress installs
 Runs from current directory and recursivly sets all directories to 755.
 #### fixfiles
 Runs from current directory and recursivly sets all files to 644.
-#### fixlinks
-Runs some common fixes after a wordpress migrations in the current directory. Includes search-replace for secure links, deactivates some plugins. 
 #### fixwpbs
 Runs a set of common wordpress fixes in your current directory.
 #### free_wordpress
@@ -73,7 +64,10 @@ Search for all Wordpress websites and lists the URL and filepath for each. You c
 Example:
 * listwp domain.com
 #### lftpline
-Prompts for lftp creds to autogenerate lftp line. Passwords w/ the characte '\' will need to be reviewed.
+Prompts for lftp creds to autogenerate lftp line. 
+
+##### flags
+* -go --opens lftp connection instead of printing line
 #### mailprep
 Prompts you for a list of imap lines and creates email accounts for you. Does not play nicely with some passwords.
 
@@ -103,6 +97,12 @@ example:
 * migrun ls migrationdbs
 #### migssh
 Logs in to the source server
+#### migssl 
+purges the cache and runs a search-replace for wordpress sites. 
+
+##### flags
+* -on  --secures site, replaces http links with https
+* -off --disables https for the site, deactivates a few plugins which force ssl on wp sites. 
 #### migsync
 rsyncs from the source server with first argument to the logged in server as the second argument.
 examples: 
@@ -115,8 +115,6 @@ example:
 Takes in a list of directories to make and cds you to the last one. This uses mkdir -p.
 #### premig
 Moves wordpress files and directories out of the current directory and into ~/premig$(date)
-#### secureit
-Does the opposite of fixlinks, but not to the same extent. Leaves most plugins as-is. auto search-replace to find insecure links. 
 #### setmainurls
 looks for .mainurl files and sets the WordPress home and siteurl options to it's contents
 #### setupssh
