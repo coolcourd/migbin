@@ -3,12 +3,11 @@
 function cache_purge() {
   mkdir ~/migration/migstuff/ 2>/dev/null
   # Remove .user.ini, cache directories
-  mkdir ~/migration/migstuff/ 2>/dev/null
   if test -f .user.ini; then 
     rm -f .user.ini 2>/dev/null
   fi
   if test -d .well-known ; then 
-      newwellknown=$(echo ".old_well-known-$(date +%s)")
+      newwellknown=$(echo "well-known-$(date +%s)")
       mv .well-known ~/migration/migstuff/"$newwellknown" 2>/dev/null
   fi
   if test -d ./wp-content/cache ; then 
