@@ -18,6 +18,11 @@ source ~/bin/migbin/bashrc
 Makes a backup of the wordpress site called psbu.tar
 #### domainlist
 If run in BH brand accounts, prints off current directory list and their assigned document roots.
+<<<<<<< HEAD
+=======
+#### dumpallbh
+Dumps all databases for BH accounts. Alternate to exportdbs if it fails.
+>>>>>>> 9281c0b1348fc71ac6d1fd37b4779547b9b9aed8
 #### dumpdb 
 Alternative for dumping wp databases, doesn't use wpcli, works on older wp versions. 
 #### exportdbs
@@ -63,6 +68,7 @@ Search for all Wordpress websites and lists the URL and filepath for each. You c
 
 Example:
 * listwp domain.com
+
 #### lftpline
 Prompts for lftp creds to autogenerate lftp line. 
 
