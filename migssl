@@ -3,8 +3,13 @@
 function cache_purge() {
   mkdir ~/migration/migstuff/ 2>/dev/null
   # Remove .user.ini, cache directories
+  mkdir ~/migration/migstuff/ 2>/dev/null
   if test -f .user.ini; then 
     rm -f .user.ini 2>/dev/null
+  fi
+  if test -d .well-known ; then 
+      newwellknown=$(echo ".old_well-known-$(date +%s)")
+      mv .well-known ~/migration/migstuff/"$newwellknown" 2>/dev/null
   fi
   if test -d ./wp-content/cache ; then 
       newcache=$(echo "cache-$(date +%s)")
@@ -17,25 +22,31 @@ function cache_purge() {
   ~/bin/migbin/wp cache flush 2>/dev/null
 }
 
-function disable_https() {
-  # Turn off plugins forcing ssl
-  ~/bin/migbin/wp plugin deactivate jetpack really-simple-ssl ssl-insecure-content-fixer --skip-themes --skip-plugins 2>/dev/null | grep -v Error | grep -v Warning 
-  ~/bin/migbin/wp plugin deactivate wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize hummingbird-performance --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error 
-  ~/bin/migbin/wp plugin deactivate w3-total-cache sucuri-scanner better-wp-security ithemes-security-pro ithemes-security --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
-  # Loop through array
+function replace_terms(){
+      # Loop through array
   for i in ${urlarray[@]}; do 
-    ~/bin/migbin/wp search-replace "$sec$i" "$insec$i" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
+    ~/bin/migbin/wp search-replace "$term_1" "$term_2" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
   done 
   # Check for elementor
   ~/bin/migbin/wp plugin list --skip-packages | tail -n +2 | grep -v inactive | grep -v must-use | grep -v dropin | awk '{print $1}' | while read a_plugins ; do
     if [[ "$a_plugins" == 'elementor' ]] ; then 
       echo 'Fixing Elementor URLs'
       for i in ${urlarray[@]}; do 
-        ~/bin/migbin/wp elementor replace_urls "$sec$i" "$insec$i" 2>/dev/null
+        ~/bin/migbin/wp elementor replace_urls "$term_1" "$term_2" 2>/dev/null
       done
       ~/bin/migbin/wp elementor flush_css 2>/dev/null
     fi 
   done 
+}
+
+function disable_https() {
+  # Turn off plugins forcing ssl
+  ~/bin/migbin/wp plugin deactivate jetpack really-simple-ssl ssl-insecure-content-fixer --skip-themes --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
+  ~/bin/migbin/wp plugin deactivate wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize hummingbird-performance --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error 
+  ~/bin/migbin/wp plugin deactivate w3-total-cache sucuri-scanner better-wp-security ithemes-security-pro ithemes-security --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
+  term_1=$(echo "$sec$i")
+  term_2=$(echo "$insec$i")
+  replace_terms
 }
 
 function enable_https() {
@@ -43,16 +54,9 @@ function enable_https() {
   for i in ${urlarray[@]}; do 
     ~/bin/migbin/wp search-replace "$insec$i" "$sec$i" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
   done 
-  # Check for elementor
-  ~/bin/migbin/wp plugin list --skip-packages | tail -n +2 | grep -v inactive | grep -v must-use | grep -v dropin | awk '{print $1}' | while read a_plugins ; do
-    if [[ "$a_plugins" == 'elementor' ]] ; then 
-      echo 'Fixing Elementor URLs'
-      for i in ${urlarray[@]}; do 
-        ~/bin/migbin/wp elementor replace_urls "$insec$i" "$sec$i" 2>/dev/null
-      done
-      ~/bin/migbin/wp elementor flush_css 2>/dev/null
-    fi 
-  done 
+  term_1=$(echo "$insec$i")
+  term_2=$(echo "$sec$i")
+  replace_terms
 }
 
 function cleanup() {
@@ -69,11 +73,6 @@ function migssl() {
   NC='\033[0m' #No Color
   # Test to see if we're in a wp directory.
   if test -f wp-config.php ; then 
-    if test -d .well-known ; then 
-        newdir=$(echo ".old_well-known-$(date +%s)")
-        mkdir ~/migration/migstuff/ 2>/dev/null
-        mv .well-known ~/migration/migstuff/"$newdir" 2>/dev/null
-    fi
     # Setup prefixes
     sec=$(echo 'https://')
     insec=$(echo 'http://')
