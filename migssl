@@ -6,7 +6,7 @@ function cache_purge() {
   if test -f .user.ini; then 
     rm -f .user.ini 2>/dev/null
   fi
-  if test -d .well-known ; then 
+  if test -d ./.well-known ; then 
       newwellknown=$(echo "well-known-$(date +%s)")
       mv .well-known ~/migration/migstuff/"$newwellknown" 2>/dev/null
   fi
@@ -22,7 +22,7 @@ function cache_purge() {
 }
 
 function replace_terms(){
-      # Loop through array
+  # Loop through array
   for i in ${urlarray[@]}; do 
     ~/bin/migbin/wp search-replace "$term_1" "$term_2" --skip-packages 2>/dev/null | tail -n 1 | grep -i success
   done 
@@ -40,7 +40,7 @@ function replace_terms(){
 
 function disable_https() {
   # Turn off plugins forcing ssl
-  ~/bin/migbin/wp plugin deactivate jetpack really-simple-ssl ssl-insecure-content-fixer --skip-themes --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
+  ~/bin/migbin/wp plugin deactivate jetpack really-simple-ssl ssl-insecure-content-fixer --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
   ~/bin/migbin/wp plugin deactivate wp-super-cache wp-smushit wordfence wp-smush-pro wp-optimize hummingbird-performance --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error 
   ~/bin/migbin/wp plugin deactivate w3-total-cache sucuri-scanner better-wp-security ithemes-security-pro ithemes-security --skip-packages 2>/dev/null | grep -iv Warning | grep -iv Error
   term_1=$(echo "$sec$i")
