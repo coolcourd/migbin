@@ -141,7 +141,10 @@ corrects rewrite rules in the .htaccess
 #### wpinfo
 Displays info about te wordpress site in the current dir.
 #### wpinstall
-Installs a fresh wordpress site.
+Installs a fresh wordpress site or repairs existing. 
+
+##### flags
+* -db --runs wpdbimport after install
 #### wpjquery
 Installs and activates the plugin enable-jquery-migrate-helper for wp sites w/ js errors
 #### wplive
