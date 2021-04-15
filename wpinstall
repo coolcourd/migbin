@@ -27,9 +27,9 @@ function main_wpinstall() {
       if [[ -n {$wpVersionNo} ]] ; then 
         echo "WP version = $wpVersionNo"
         echo "Downloading matching version..."
-        wget -q https://wordpress.org/wordpress-$wpVersionNo.tar.gz
-        tar -xf wordpress-$wpVersionNo.tar.gz --strip-components=1
-        rm -f wordpress-$wpVersionNo.tar.gz
+        wget -q https://wordpress.org/wordpress-"$wpVersionNo".tar.gz
+        tar -xf wordpress-"$wpVersionNo".tar.gz --strip-components=1
+        rm -f wordpress-"$wpVersionNo".tar.gz
         if [[ $1 == '-db' ]]; then 
           wpdbimport
           wp config shuffle-salts
