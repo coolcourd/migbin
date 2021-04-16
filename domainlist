@@ -1,12 +1,48 @@
 #!/bin/bash
-function domainlist(){
+function docrootlookup() {
+    if [[ "$i" == '- '* ]]; then 
+      domain_name=$(echo "$i" | sed -E 's/- //g')
+      doc_root=$(uapi DomainInfo single_domain_data domain="$domain_name" | grep 'documentroot: ' | sed -E 's/documentroot\: //g')
+      echo -e "      - domain :         ${yellow}$domain_name" ${no_Color}
+      echo -e "        docroot:     ${blue}$doc_root/" ${no_Color}
+    else 
+      if [[ "$i" == *\[\] ]]; then 
+        type=$(echo "$i" | sed -E 's/\[\]//g' )
+        echo "    $i" | grep "$type"
+      else
+        type=$(echo "$i" | sed -E 's/-//g' )
+        echo "    $i" | grep "$type"
+      fi
+    fi
+}
+function domainlist() {
+  yellow='\033[1;93m'
+  blue='\033[1;94m'
+  green='\033[1;92m'
+  no_Color='\033[0m'
+  line1=$(uapi DomainInfo list_domains | grep main_domain | cut -d ':' -f 1)
+  main_domain_name=$(uapi DomainInfo list_domains | grep 'main_domain:' | cut -d ':' -f 2 | sed 's/ //g' )
+  main_doc_root=$(uapi DomainInfo single_domain_data domain="$main_domain_name" | grep 'documentroot: ' | sed -E 's/documentroot\: //g' )
   echo ''
-  uapi DomainInfo list_domains | grep main_domain
+  echo -e "${green}$line1"':' ${no_Color}
+  echo -e "      - domain :         ${yellow}$main_domain_name" ${no_Color}
+  echo -e "        docroot:     ${blue}$main_doc_root/" ${no_Color}
   echo ''
-  uapi DomainInfo list_domains | tail -n +7 | head -n -6 | grep -v main_domain | grep -v '\[\]' | grep -E -v ':' | sed -E 's/-//g' | sed -E 's/ //g' | grep -E '.' | while read x ; do
-  uapi DomainInfo single_domain_data domain="$x" | grep 'domain: '
-  uapi DomainInfo single_domain_data domain="$x" | grep 'documentroot: ' 
+  maindomain_line=$(uapi DomainInfo list_domains | grep -n 'main_domain:' | cut -d ':' -f 1)
+  addonomain_line=$(uapi DomainInfo list_domains | grep -n 'addon_domains:' | cut -d ':' -f 1)
+  parkeddomain_line=$(uapi DomainInfo list_domains | grep -n 'parked_domains:' | cut -d ':' -f 1)
+  subdomain_line=$(uapi DomainInfo list_domains | grep -n 'sub_domains:' | cut -d ':' -f 1)
+  error_line=$(uapi DomainInfo list_domains | grep -n 'errors:' | cut -d ':' -f 1)
+  uapi DomainInfo list_domains | tail -n +$parkeddomain_line  | head -n $(($subdomain_line - $parkeddomain_line)) | grep 'parked_domains:'
+  uapi DomainInfo list_domains | tail -n +$parkeddomain_line  | head -n $(($subdomain_line - $parkeddomain_line)) | grep -v 'parked_domains:'
   echo ''
+  uapi DomainInfo list_domains | tail -n +$addonomain_line  | head -n $(($maindomain_line - $addonomain_line)) | while read i ; do 
+    docrootlookup
   done
+  echo ''
+  uapi DomainInfo list_domains | tail -n +$subdomain_line  | head -n $(($error_line - $subdomain_line)) | while read i ; do 
+    docrootlookup
+  done
+  echo ''
 }
 domainlist
