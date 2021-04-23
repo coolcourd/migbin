@@ -1,0 +1,21 @@
+#!/bin/bash
+  if [[ $1 == '-h' ]]; then
+      echo
+      echo "usage"
+      echo "gdrive_download"
+      echo "or"
+      echo "gdrive_download fileid filename"
+      echo
+  else
+      fileid=$1
+      filename=$2
+      if [[ $1 == '' ]]; then
+      read -p "provide file id now. > " fileid
+      fi
+      if [[ $2 == '' ]]; then
+      read -p "provide file name now. > " filename
+      fi
+      CONFIRM=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate "https://docs.google.com/uc?export=download&id=$fileid" -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')
+  wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$CONFIRM&id=$fileid" -O $filename
+  rm -rf /tmp/cookies.txt
+fi

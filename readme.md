@@ -52,6 +52,10 @@ urls are automatically detected in the command-line arguments.
 * -t --test : runs automated testing on the functions in this file.
 * -w --wordpress-version : sets the wordpress version of the install
 * -p --php-version : sets the php version of the install
+#### gdrive_download
+downloads a file from google drive. Takes a file id and what you want to name the file. Will prompt if arguments aren't provided.
+
+Example: gdrive_download 37284tuyqwerg893467rt backup.zip
 #### getmysites
 Builds an outline of all wordpress sites on the account and saves to ~/migration/migstuff/mysites.txt
 #### httpit
