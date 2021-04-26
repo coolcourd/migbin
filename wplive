@@ -16,4 +16,24 @@ function wplive() {
         echo we need 2 arguments
     fi
 }
+function mwplive() {
+    read -p "replace site at ~/public_html with site in ~/migration/files? type y or n > " continueon
+    if [ $continueon != y ]; then exit; fi;
+    cd ~/public_html
+    TODAY=$(date +%s)
+    mkdir ~/premig.${TODAY}
+    mv ~/public_html/wp-config.php ~/public_html/wp-content ~/public_html/.htaccess ~/public_html/error_log ~/premig.${TODAY}
+    echo moved ~/public_html/wp-config.php ~/public_html/wp-content ~/public_html/.htaccess ~/public_html/error_log to ~/premig.${TODAY}
+    rsync -avP ~/migration/files/wp-content ~/migration/files/wp-config.php ~/public_html/
+    matchdbimport
+    httpit
+    wp plugin deactivate --skip-plugins --skip-themes really-simple-ssl one-click-ssl 2>/dev/null
+    wpurl
+}
+
+server=$(hostname)
+if [[ $server == cp.mwp* ]]; then
+    mwplive
+    exit
+fi
 wplive $1 $2
