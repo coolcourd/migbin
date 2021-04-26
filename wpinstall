@@ -1,22 +1,49 @@
 #!/bin/bash
-
 function wpinstall() {
 #check if the directory is (mostly) empty
 check_path_files=`find . -maxdepth 1 -type f | wc -l`
 check_path_dirs=`find . -maxdepth 1 -type d | wc -l`
-
 if [[ $check_path_files == 0 ]] && [[ $check_path_dirs == 1 ]]; then
   wget -q https://wordpress.org/latest.tar.gz
   tar -xf latest.tar.gz --strip-components=1 wordpress/
   rm -f latest.tar.gz
-  cp wp-config-sample.php wp-config.php
-  wpdbimport
-  wp config shuffle-salts
+    if [[ $1 == '-db' ]]; then 
+      cp wp-config-sample.php wp-config.php
+      wpdbimport
+      wp config shuffle-salts
+    fi
   echo -e "\e[32mWordpress installed. Go to the site now.\e[0m"
 else
   echo -e "\e[31mThere is content in this directory, aborting.\e[0m"
 fi
 }
-
-wpinstall
+function main_wpinstall() {
+  server=$(hostname)
+  if [[ $server == cp.mwp* ]]; then
+    echo "Maybe don't run this on an MWP account"
+  else  
+    if test -f ./wp-includes/version.php ; then 
+      wpVersionNo=$(grep -s '$wp_version =' ./wp-includes/version.php | cut -d "'" -f 2 )
+      if [[ -n {$wpVersionNo} ]] ; then 
+        echo "WP version = $wpVersionNo"
+        echo "Downloading matching version..."
+        wget -q https://wordpress.org/wordpress-"$wpVersionNo".tar.gz
+        tar -xf wordpress-"$wpVersionNo".tar.gz --strip-components=1
+        rm -f wordpress-"$wpVersionNo".tar.gz
+        if [[ $1 == '-db' ]]; then 
+          wpdbimport
+          wp config shuffle-salts
+        fi 
+        echo -e "\e[32mWordpress installed. Go to the site now.\e[0m"
+      else 
+        echo 'Defaulting to latest version'
+        wpinstall
+      fi 
+    else
+      echo 'No Wordpress Includes folder found, attempting to install WordPress latest release'
+      wpinstall
+    fi
+  fi
+}
+main_wpinstall $1
 tempurl
