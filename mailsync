@@ -12,6 +12,7 @@ if [ ! -d ~/migration/migstuff/ ] ; then
   mkdir ~/migration/migstuff/logs/ 2>/dev/null
 elif [ ! -d ~/migration/migstuff/logs/ ] ; then 
   mkdir ~/migration/migstuff/logs/ 2>/dev/null
+  mkdir ~/migration/migstuff/logs/"$1"/ 2>/dev/null
 fi
 
 echo ''
@@ -19,8 +20,8 @@ timestamp=$(date +%s)
 
 # function to count inodes in mail dir for domain 
 
-echo ' ' > ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt
-echo ' ' > ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt
+echo ' ' > ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt
+echo ' ' > ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
 
 function mail_Count() {
   (cd ~/mail/"$1" ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
@@ -38,29 +39,32 @@ echo -e "Migrating mail for $1\n"
 
 # record mail box state from before sync
 
-echo -e 'PRE\t↓' 1> ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt
-count_and_Format $1 1>> ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt 
+echo -e 'PRE\t↓' 1> ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt
+count_and_Format $1 1>> ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt 
 
 # do the actual sync 
 
 sourcecreds=$(cat ~/migration/migstuff/source.txt)
 
-rsync -h --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
-rsync -h -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
+rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
+rsync -h --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
+
+rsync --dry-run -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_mail_log_"$timestamp".txt &
+rsync -h -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
 
 # count inodes of updated mail boxes
 
-echo -e 'CUR\t↓' 1> ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt
-count_and_Format $1 1>> ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt 
+echo -e 'CUR\t↓' 1> ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
+count_and_Format $1 1>> ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt 
 
 # final output, compare states 
 
-diff -T -y --ignore-matching-lines=.*↓ ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt 1> ~/migration/migstuff/logs/"$1"_"$timestamp".txt 
+diff -T -y --ignore-matching-lines=.*↓ ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt 1> ~/migration/migstuff/logs/"$1"/"$1"_"$timestamp".txt 
 
 sleep 1
 
 echo ' '
 
-cat ~/migration/migstuff/logs/"$1"_"$timestamp".txt 
+cat ~/migration/migstuff/logs/"$1"/"$1"_"$timestamp".txt 
 
 echo ' '
