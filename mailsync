@@ -1,5 +1,63 @@
 #!/bin/bash
-migsync etc/${1%/} ~/etc
-migsync etc/${1%/} ~/etc
-migsync mail/${1%/} ~/mail
-migsync mail/${1%/} ~/mail
+
+# check to see if there's an argument
+
+if [ -z "$1" ]; then
+  echo -e 'USAGE: mailsync [domain]'
+  exit 1
+fi 
+
+if [ ! -d ~/migration/migstuff/ ] ; then  
+  mkdir ~/migration/migstuff/ 2>/dev/null
+  mkdir ~/migration/migstuff/logs/ 2>/dev/null
+elif [ ! -d ~/migration/migstuff/logs/ ] ; then 
+  mkdir ~/migration/migstuff/logs/ 2>/dev/null
+fi
+
+echo ''
+timestamp=$(date +%s)
+
+# function to count inodes in mail dir for domain 
+
+function mail_Count() {
+  (cd ~/mail/"$1" ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
+}
+
+# function to format and send count to file 
+
+function count_and_Format() {
+  if [[ -d ~/mail/$1 ]]; then 
+    mail_Count $1 | sed -rn "s/\s*\.\/(\w+)/\t\1@$1/p"
+  fi 
+}
+
+echo -e "Migrating mail for $1\n"
+
+# record mail box state from before sync
+
+echo -e '\nPREVIOUS\t↓\n' 1> ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt
+count_and_Format $1 1>> ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt 
+
+# do the actual sync 
+
+sourcecreds=$(cat ~/migration/migstuff/source.txt)
+
+rsync -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
+rsync -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
+
+# count inodes of updated mail boxes
+
+echo -e '\nCURRENT\t↓\n' 1> ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt
+count_and_Format $1 1>> ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt 
+
+# final output, compare states 
+
+diff -T -y --ignore-matching-lines=.*↓ ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".txt ~/migration/migstuff/logs/aftersync_"$1"_"$timestamp".txt 1> ~/migration/migstuff/logs/"$1"_"$timestamp".txt 
+
+echo ' '
+
+cat ~/migration/migstuff/logs/"$1"_"$timestamp".txt | column -tc4
+
+rm -f ~/migration/migstuff/logs/{before,after}*
+
+echo ' '

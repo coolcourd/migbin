@@ -1,9 +1,9 @@
-$!/bin/bash
+#!/bin/bash
 function dumpdb() {
-dbn=$(grep -oP 'DB_N(\w*).,\s(.)\K.+(?=\2)' wp-config.php)
-dbu=$(grep -oP 'DB_U(\w*).,\s(.)\K.+(?=\2)' wp-config.php)
-dbh=$(grep -oP 'DB_H(\w*).,\s(.)\K.+(?=\2)' wp-config.php)
-dbp=$(grep -oP 'DB_P(\w*).,\s(.)\K.+(?=\2)' wp-config.php) 
+dbn=$(grep -oP 'DB_N(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbu=$(grep -oP 'DB_U(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbh=$(grep -oP 'DB_H(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbp=$(grep -oP 'DB_P(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php) 
 echo "PASSWORD: $dbp"
 mysqldump -u $dbu -p -h $dbh $dbn > $dbn.sql 
 if test -s $dbn.sql ; then 
