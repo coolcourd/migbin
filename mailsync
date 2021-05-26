@@ -42,7 +42,7 @@ count_and_Format $1 1>> ~/migration/migstuff/logs/beforesync_"$1"_"$timestamp".t
 
 sourcecreds=$(cat ~/migration/migstuff/source.txt)
 
-rsync -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
+rsync --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
 rsync -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/mailsync_log_"$timestamp".txt
 
 # count inodes of updated mail boxes
