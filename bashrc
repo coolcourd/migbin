@@ -25,6 +25,6 @@ function mig() {
 	cd ~/migration/files
 }
 if [[ ! $(echo $PATH | grep migbin) ]]; then
-    PATH=$PATH:~/bin/migbin:~/bin/migbin/binaries
+    PATH=$PATH:~/bin/migbins
 fi
 cat ~/bin/migbin/migbin
