@@ -82,6 +82,10 @@ example:
 * mailsync example.com # syncs mail for example.com
 #### mainurlit
 sets the tempurl back to the main url based on the .mainurl file located in the cwd
+#### newdbimport
+creates and imports an sql file. Outputs the new credentials. 
+example:
+* newdbimport file.sql
 #### phpver
 gives you a list of ea-php versions installed on the server and lets you pick one
 #### matchdbimport
