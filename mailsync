@@ -23,7 +23,11 @@ echo ' ' > ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
 # function to count inodes in mail dir for domain
 
 function mail_Count() {
-  (cd ~/mail/$1 ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
+  if test -d ~/mail/$1; then 
+    (cd ~/mail/$1 ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
+  else 
+    echo "NO MAIL FOLDER MADE, CHECK SPELLING OF DOMAIN."
+    exit 1 
 }
 
 # format and send count to file 
