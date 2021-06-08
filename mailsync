@@ -8,7 +8,14 @@ if [ -z "$1" ]; then
 fi 
 
 if [ ! -d ~/migration/migstuff/ ] ; then  
+<<<<<<< HEAD
   mkdir -p ~/migration/migstuff/logs/"$1"/ 2>/dev/null
+=======
+  mkdir -p ~/migration/migstuff/logs/ 2>/dev/null
+elif [ ! -d ~/migration/migstuff/logs/ ] ; then 
+  mkdir ~/migration/migstuff/logs/ 2>/dev/null
+  mkdir ~/migration/migstuff/logs/"$1"/ 2>/dev/null
+>>>>>>> 637ed99d7966fde4608e43796a22771a8255dcc3
 fi
 
 echo ''
