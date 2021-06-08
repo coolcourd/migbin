@@ -8,8 +8,10 @@ if [ -z "$1" ]; then
 fi 
 
 if [ ! -d ~/migration/migstuff/ ] ; then  
-  mkdir -p ~/migration/migstuff/logs/"$1"/ 2>/dev/null
+  mkdir -p ~/migration/migstuff/logs/ 2>/dev/null
 fi
+
+mkdir -p ~/migration/migstuff/logs/$1/ 2>/dev/null
 
 echo ''
 timestamp=$(date +%s)
@@ -18,11 +20,17 @@ timestamp=$(date +%s)
 echo ' ' > ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt
 echo ' ' > ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
 
-# function to count inodes in mail dir for domain, then format and send count to file 
+# function to count inodes in mail dir for domain
+
+function mail_Count() {
+  (cd ~/mail/$1 ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
+}
+
+# format and send count to file 
 
 function count_and_Format() {
   if [[ -d ~/mail/$1 ]]; then 
-    find ~/mail/$1/ -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn | sed -rn "s/\s*\.\/(.*+)/\t\1@$1/p"
+    mail_Count $1 | sed -rn "s/\s*\.\/(.*+)/\t\1@$1/p"
   fi 
 }
 
@@ -63,12 +71,12 @@ count_and_Format $1 1>> ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestam
 
 # final output, compare states 
 
-diff -T -y --ignore-matching-lines=CUR ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt 1> ~/migration/migstuff/logs/"$1"/"$1"_"$timestamp".txt 
+diff -T -y --ignore-matching-lines=CUR ~/migration/migstuff/logs/$1/beforesync_"$1"_"$timestamp".txt ~/migration/migstuff/logs/$1/aftersync_"$1"_"$timestamp".txt 1> ~/migration/migstuff/logs/$1/"$1"_"$timestamp".txt 
 
 sleep 1
 
 echo ' '
 
-cat ~/migration/migstuff/logs/"$1"/"$1"_"$timestamp".txt 
+cat ~/migration/migstuff/logs/$1/"$1"_"$timestamp".txt 
 
 echo ' '
