@@ -8,11 +8,7 @@ if [ -z "$1" ]; then
 fi 
 
 if [ ! -d ~/migration/migstuff/ ] ; then  
-  mkdir ~/migration/migstuff/ 2>/dev/null
-  mkdir ~/migration/migstuff/logs/ 2>/dev/null
-elif [ ! -d ~/migration/migstuff/logs/ ] ; then 
-  mkdir ~/migration/migstuff/logs/ 2>/dev/null
-  mkdir ~/migration/migstuff/logs/"$1"/ 2>/dev/null
+  mkdir -p ~/migration/migstuff/logs/"$1"/ 2>/dev/null
 fi
 
 echo ''
@@ -23,15 +19,11 @@ timestamp=$(date +%s)
 echo ' ' > ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt
 echo ' ' > ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
 
-function mail_Count() {
-  (cd ~/mail/"$1" ; find . -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn)
-}
-
 # function to format and send count to file 
 
 function count_and_Format() {
   if [[ -d ~/mail/$1 ]]; then 
-    mail_Count $1 | sed -rn "s/\s*\.\/(.*+)/\t\1@$1/p"
+    find ~/mail/$1/ -printf "%h\n" | cut -d/ -f-2 | sort | uniq -c | sort -rn | sed -rn "s/\s*\.\/(.*+)/\t\1@$1/p"
   fi 
 }
 
@@ -44,26 +36,26 @@ count_and_Format $1 1>> ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timesta
 
 # do the actual sync 
 
-sourcecreds=$(cat ~/migration/migstuff/source.txt)
+creds=$(cat ~/migration/migstuff/source.txt)
 
 #check rsync version for progress option
 rsync_version=$(rsync --version | grep -oP 'rsync\s+version\s\K(\d\.\d)' | sed -rn 's/\.//p')
 
+rsync --dry-run -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_mail_log_"$timestamp".txt &
+
 if [[ "$rsync_version" -lt "31" ]]; then 
   echo "Syncing mail, no progress bar available"
   # sync etc
-  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
-  rsync -h --ignore-existing -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
+  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
+  rsync -h --ignore-existing -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
   #sync mail 
-  rsync --dry-run -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_mail_log_"$timestamp".txt &
-  rsync -h -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
+  rsync -h -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
 else 
   # sync etc
-  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
-  rsync -h --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
+  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
+  rsync -h --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
   #sync mail 
-  rsync --dry-run -avP -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_mail_log_"$timestamp".txt &
-  rsync -h -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $sourcecreds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
+  rsync -h -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
 fi
 
 # count inodes of updated mail boxes
