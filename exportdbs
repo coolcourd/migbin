@@ -20,6 +20,9 @@ function dumpallbh() {
         echo "Did not dump database $x"
       fi 
     done
+    if [ ! -z "$mig_user" ]; then 
+      uapi Mysql delete_user name="$mig_user" 1>/dev/null
+    fi
   fi
 }
 dumpallbh

@@ -1,20 +1,19 @@
 #!/bin/bash
 function dumpdb() {
-  DB_USER=$( grep DB_USER wp-config.php | cut -d "'" -f 4)    
-  DB_PASS=$( grep DB_PASSWORD wp-config.php | cut -d "'" -f 4)
-  DB_NAME=$( grep DB_NAME wp-config.php | cut -d "'" -f 4)
-  DB_HOST=$( grep DB_HOST wp-config.php | cut -d "'" -f 4)
-    if [[ $DB_HOST == *':'* ]]; then 
-      DB_HOST=$( grep DB_HOST wp-config.php | cut -d "'" -f 4 | cut -d ':' -f 1)
-      PORT=$( grep DB_HOST wp-config.php | cut -d "'" -f 4 | cut -d ':' -f 2)
-      mysqldump -u "$DB_USER"  -p"$DB_PASS" "$DB_NAME" -h "$DB_HOST" --port="$PORT" > "$DB_NAME".sql
-    else 
-      mysqldump -u "$DB_USER"  -p"$DB_PASS" "$DB_NAME" -h "$DB_HOST" > "$DB_NAME".sql
-    fi
-  if test -f "$DB_NAME".sql ; then
-    echo "Successfully dumped DB $DB_NAME"
-  else
-    echo "Did not dump DB $DB_NAME"
-  fi
+dbn=$(grep -oP 'DB_N(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbu=$(grep -oP 'DB_U(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbh=$(grep -oP 'DB_H(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php)
+dbp=$(grep -oP 'DB_P(\w*).,[\s]+(.)\K.+(?=\2)' wp-config.php) 
+echo "PASSWORD: $dbp"
+mysqldump -u $dbu -p -h $dbh $dbn > $dbn.sql 
+if test -s $dbn.sql ; then 
+  echo "Successully dumped $dbn to file $dbn.sql"
+else 
+  echo "Did not dump the db $dbn, the following credentials were used: "
+  echo "DB:   $dbn"
+  echo "USER: $dbu"
+  echo "PASS: $dbp"
+  echo "HOST: $dbh"
+fi
 }
 dumpdb

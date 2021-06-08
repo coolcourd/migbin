@@ -75,10 +75,11 @@ Prompts you for a list of imap lines and creates email accounts for you. Does no
 Imap lines look like this:
 source-imap-mailserver source-email-address source-password destination-imap-mailserver destination-email-address destination-password
 #### mailsync
-syncs etc and mail. can be used to sync an individual domain.
+syncs etc and mail.  used to sync an individual domain.
+does not overwrite existing pw files. 
+outputs mailcount differences.
 example: 
-* mailsync # syncs all mail
-* mailsync example.com # syncs only mail for example.com
+* mailsync example.com # syncs mail for example.com
 #### mainurlit
 sets the tempurl back to the main url based on the .mainurl file located in the cwd
 #### phpver
