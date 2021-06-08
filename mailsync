@@ -28,6 +28,7 @@ function mail_Count() {
   else 
     echo "NO MAIL FOLDER MADE, CHECK SPELLING OF DOMAIN."
     exit 1 
+  fi
 }
 
 # format and send count to file 
