@@ -8,25 +8,17 @@ if [ -z "$1" ]; then
 fi 
 
 if [ ! -d ~/migration/migstuff/ ] ; then  
-<<<<<<< HEAD
   mkdir -p ~/migration/migstuff/logs/"$1"/ 2>/dev/null
-=======
-  mkdir -p ~/migration/migstuff/logs/ 2>/dev/null
-elif [ ! -d ~/migration/migstuff/logs/ ] ; then 
-  mkdir ~/migration/migstuff/logs/ 2>/dev/null
-  mkdir ~/migration/migstuff/logs/"$1"/ 2>/dev/null
->>>>>>> 637ed99d7966fde4608e43796a22771a8255dcc3
 fi
 
 echo ''
 timestamp=$(date +%s)
 
-# function to count inodes in mail dir for domain 
 
 echo ' ' > ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timestamp".txt
 echo ' ' > ~/migration/migstuff/logs/"$1"/aftersync_"$1"_"$timestamp".txt
 
-# function to format and send count to file 
+# function to count inodes in mail dir for domain, then format and send count to file 
 
 function count_and_Format() {
   if [[ -d ~/mail/$1 ]]; then 
@@ -45,23 +37,22 @@ count_and_Format $1 1>> ~/migration/migstuff/logs/"$1"/beforesync_"$1"_"$timesta
 
 creds=$(cat ~/migration/migstuff/source.txt)
 
-#check rsync version for progress option
+# check rsync version for progress option
 rsync_version=$(rsync --version | grep -oP 'rsync\s+version\s\K(\d\.\d)' | sed -rn 's/\.//p')
 
 rsync --dry-run -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_mail_log_"$timestamp".txt &
+rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
 
 if [[ "$rsync_version" -lt "31" ]]; then 
   echo "Syncing mail, no progress bar available"
   # sync etc
-  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
   rsync -h --ignore-existing -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
-  #sync mail 
+  # sync mail 
   rsync -h -a --no-i-r -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
 else 
   # sync etc
-  rsync --dry-run --ignore-existing -avP -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc 1> ~/migration/migstuff/logs/"$1"/dryrun_mailsync_etc_log_"$timestamp".txt &
   rsync -h --ignore-existing -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/etc/${1%/} ~/etc | tee ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
-  #sync mail 
+  # sync mail 
   rsync -h -a --no-i-r --info=progress2 -e "ssh -i ~/migration/migstuff/id_rsa" $creds:~/mail/${1%/} ~/mail | tee -a ~/migration/migstuff/logs/"$1"/mailsync_log_"$timestamp".txt
 fi
 
